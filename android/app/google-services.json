@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "525189697695",
+    "project_id": "ippu-20dbc",
+    "storage_bucket": "ippu-20dbc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525189697695:android:31f7e3b752196ce07f12aa",
+        "android_client_info": {
+          "package_name": "com.impact.ippu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBm_Cu0SEjqNO3PA-1_bqdDycnGX2BKFuc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

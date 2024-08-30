@@ -1,0 +1,11 @@
+[
+    {
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.impact.ippu",
+        "sha256_cert_fingerprints":
+          ["57:DF:3D:04:E7:AA:2D:FE:FA:BD:D4:05:BB:8F:4A:53:F4:CB:A5:C9:B6:25:B9:CD:E5:96:85:CB:7F:08:B2:2F"]
+      }
+    }
+  ]
