@@ -1,7 +1,4 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ippu/Providers/ProfilePicProvider.dart';
 import 'package:ippu/Screens/ProfileScreen.dart';
@@ -12,7 +9,6 @@ import 'package:ippu/Widgets/HomeScreenWidgets/FirstDisplaySection.dart';
 import 'package:ippu/models/UserData.dart';
 import 'package:provider/provider.dart';
 //import http package
-import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -74,13 +70,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 }));
               },
               child: Padding(
-                padding: EdgeInsets.only(right: size.width * 0.06),
-                child: const Icon(
-                  Icons.calendar_today,
-                  color: Colors.white,
-                  size: 30
-                )
-              ),
+                  padding: EdgeInsets.only(right: size.width * 0.06),
+                  child: const Icon(Icons.calendar_today,
+                      color: Colors.white, size: 30)),
             ),
           ),
           InkWell(
@@ -98,8 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Padding(
                 padding: EdgeInsets.only(right: size.width * 0.06),
                 child: CircleAvatar(
-                  backgroundImage: NetworkImage(
-                      networkUrl),
+                  backgroundImage: NetworkImage(networkUrl),
                   backgroundColor: Colors.white,
                 ),
               ),
@@ -115,7 +106,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 
   void showBottomNotification(String message) {
     Fluttertoast.showToast(

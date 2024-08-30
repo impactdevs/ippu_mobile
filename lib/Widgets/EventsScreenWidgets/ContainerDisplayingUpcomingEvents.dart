@@ -22,15 +22,7 @@ class _ContainerDisplayingUpcomingEventsState
   AuthController authController = AuthController();
 
   final ScrollController _scrollController = ScrollController();
-  final TextEditingController _searchController = TextEditingController();
   final String _searchQuery = '';
-
-  void _scrollToTop() {
-    _scrollController.animateTo(0,
-        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-  }
-
-  bool _showBackToTopButton = false;
 
   late Future<List<AllEventsModel>> eventDataFuture;
   @override
@@ -41,10 +33,7 @@ class _ContainerDisplayingUpcomingEventsState
   }
 
   void _updateScrollVisibility() {
-    setState(() {
-      _showBackToTopButton = _scrollController.offset >
-          _scrollController.position.maxScrollExtent / 2;
-    });
+    setState(() {});
   }
 
   // function fetching upcoming events
@@ -52,7 +41,8 @@ class _ContainerDisplayingUpcomingEventsState
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/upcoming-events/${userData?.id}';
+    final apiUrl =
+        'https://staging.ippu.org/api/upcoming-events/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -65,7 +55,7 @@ class _ContainerDisplayingUpcomingEventsState
         final Map<String, dynamic> jsonData = jsonDecode(response.body);
         final List<dynamic> eventData = jsonData['data'];
         List<AllEventsModel> eventsData = eventData.map((item) {
-          if(item['points']==null){
+          if (item['points'] == null) {
             item['points'] = '0';
           }
           return AllEventsModel(
@@ -76,7 +66,8 @@ class _ContainerDisplayingUpcomingEventsState
             normal_rate: item['rate'] ?? '',
             attandence_request: item['attendance_request'] ?? '',
             member_rate: item['member_rate'] ?? '',
-            points:item['points'].toString(), // Convert points to string if needed
+            points:
+                item['points'].toString(), // Convert points to string if needed
             attachment_name: item['attachment_name'] ?? '',
             banner_name: item['banner_name'] ?? '',
             details: item['details'] ?? '',
@@ -92,10 +83,11 @@ class _ContainerDisplayingUpcomingEventsState
       return []; // Return an empty list or handle the error in your UI
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-      final profileStatus = context.watch<UserProvider>().profileStatusCheck;
+    final profileStatus = context.watch<UserProvider>().profileStatusCheck;
     return Scaffold(
       body: Column(
         children: [
@@ -154,7 +146,7 @@ class _ContainerDisplayingUpcomingEventsState
                                 .contains(_searchQuery.toLowerCase())) {
                           return InkWell(
                             onTap: () {
-                              if(profileStatus == true){
+                              if (profileStatus == true) {
                                 _showDialog();
                                 return;
                               }
@@ -210,7 +202,8 @@ class _ContainerDisplayingUpcomingEventsState
                                   width: size.width * 0.7,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10),
-                                    color: const Color.fromARGB(255, 42, 129, 201),
+                                    color:
+                                        const Color.fromARGB(255, 42, 129, 201),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.grey.withOpacity(0.5),
@@ -231,18 +224,20 @@ class _ContainerDisplayingUpcomingEventsState
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             Expanded(
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                  left: size.width * 0.03),
-                                              child: Text(
-                                                item.name.split(' ').take(4).join(' '), // Display only the first two words
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: size.height * 0.014,
+                                              child: Padding(
+                                                padding: EdgeInsets.only(
+                                                    left: size.width * 0.03),
+                                                child: Text(
+                                                  item.name.split(' ').take(4).join(
+                                                      ' '), // Display only the first two words
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize:
+                                                        size.height * 0.014,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
                                             ),
                                             Padding(
                                               padding: EdgeInsets.only(
@@ -343,7 +338,7 @@ class _ContainerDisplayingUpcomingEventsState
     return parts[0];
   }
 
-    void _showDialog() {
+  void _showDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {

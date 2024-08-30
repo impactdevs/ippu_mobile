@@ -3,11 +3,10 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SingleCommunicationDisplayScreen extends StatefulWidget {
-  
-  String communicationtitle;
-  String communicationbody;
-  String communicationdate;
-  SingleCommunicationDisplayScreen(
+  final String communicationtitle;
+  final String communicationbody;
+  final String communicationdate;
+  const SingleCommunicationDisplayScreen(
       {super.key,
       required this.communicationbody,
       required this.communicationtitle,
@@ -15,18 +14,11 @@ class SingleCommunicationDisplayScreen extends StatefulWidget {
 
   @override
   State<SingleCommunicationDisplayScreen> createState() =>
-      _SingleCommunicationDisplayScreenState(communicationbody,
-          communicationtitle, communicationdate);
+      _SingleCommunicationDisplayScreenState(); //-
 }
 
 class _SingleCommunicationDisplayScreenState
     extends State<SingleCommunicationDisplayScreen> {
-  String communicationtitle;
-  String communicationbody;
-  String communicationdate;
-  _SingleCommunicationDisplayScreenState(
-      this.communicationbody, this.communicationtitle, this.communicationdate);
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -39,7 +31,7 @@ class _SingleCommunicationDisplayScreenState
               right: size.width * 0.016,
             ),
             child: Text(
-              communicationtitle,
+              widget.communicationtitle,
               style: GoogleFonts.roboto(
                 fontSize: size.height * 0.02,
                 fontWeight: FontWeight.bold,
@@ -79,7 +71,7 @@ class _SingleCommunicationDisplayScreenState
                     right: size.width * 0.016,
                   ),
                   child: Text(
-                    communicationtitle,
+                    widget.communicationtitle,
                     style: GoogleFonts.roboto(
                       fontSize: size.height * 0.02,
                       fontWeight: FontWeight.bold,
@@ -99,7 +91,7 @@ class _SingleCommunicationDisplayScreenState
                   bottom: size.height * 0.008,
                 ),
                 child: Html(
-                  data: communicationbody,
+                  data: widget.communicationbody,
                   style: {
                     "p": Style(
                       // Apply style to <p> tags
@@ -138,7 +130,7 @@ class _SingleCommunicationDisplayScreenState
                               color: Colors.green, fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          communicationdate,
+                          widget.communicationdate,
                           style: GoogleFonts.roboto(
                             fontSize: size.height * 0.016,
                           ),

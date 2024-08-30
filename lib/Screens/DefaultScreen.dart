@@ -8,7 +8,6 @@ import 'package:ippu/Screens/CommunicationScreen.dart';
 import 'package:ippu/Screens/CpdsScreen.dart';
 import 'package:ippu/Screens/Dashboard.dart';
 import 'package:ippu/Screens/EventsScreen.dart';
-import 'package:ippu/Screens/HomeScreen.dart';
 import 'package:ippu/Screens/animated_text.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/UserData.dart';
@@ -125,7 +124,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
 
   int _selectedIndex = 0;
   List Page = [
-    const Dashboard (),
+    const Dashboard(),
     const CpdsScreen(),
     const EventsScreen(),
     const CommunicationScreen(),

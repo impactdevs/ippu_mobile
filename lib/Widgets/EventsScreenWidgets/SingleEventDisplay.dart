@@ -121,7 +121,6 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
           future: loadProfile(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              final profileData = snapshot.data as UserData;
               return SingleChildScrollView(
                 scrollDirection: Axis.vertical,
                 child: Padding(
@@ -287,8 +286,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
                                 onPressed: () {
                                   // _handlePaymentInitialization(profileData.name,
                                   //     profileData.email, profileData.phone_no!);
-                                        sendAttendanceRequest(widget.id);
-
+                                  sendAttendanceRequest(widget.id);
                                 },
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(

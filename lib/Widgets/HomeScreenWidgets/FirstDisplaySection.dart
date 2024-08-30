@@ -137,14 +137,6 @@ class _FirstDisplaySectionState extends State<FirstDisplaySection>
       final cpds = await authController.getCpds(userId);
       final events = await authController.getEvents(userId);
       final communications = await authController.getAllCommunications(userId);
-      TextEditingController searchController = TextEditingController();
-      String searchQuery = '';
-
-      @override
-      void dispose() {
-        searchController.dispose();
-        super.dispose();
-      }
 
       setState(() {
         totalEvents = events.length;
