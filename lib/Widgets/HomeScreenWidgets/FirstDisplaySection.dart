@@ -369,7 +369,7 @@ class _FirstDisplaySectionState extends State<FirstDisplaySection>
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
         redirectUrl: 'https://staging.ippu.org/login',
-        txRef: Uuid().v1(),
+        txRef: const Uuid().v1(),
         amount: membershipAmount,
         customer: customer,
         paymentOptions: "card, payattitude, barter, bank transfer, ussd",
@@ -386,7 +386,7 @@ class _FirstDisplaySectionState extends State<FirstDisplaySection>
     } else {
       message = "Payment failed,\n try again later";
     }
-    this.showLoading(message);
+    showLoading(message);
   }
 
   Future<void> showLoading(String message) {

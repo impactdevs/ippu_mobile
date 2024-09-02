@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:ippu/Providers/ProfilePicProvider.dart';
+// import 'package:ippu/Providers/ProfilePicProvider.dart';
 import 'package:ippu/Screens/ProfileScreen.dart';
-import 'package:ippu/Screens/SettingsScreen.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/CalendarScreen.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/FirstDisplaySection.dart';
 import 'package:ippu/models/UserData.dart';
-import 'package:provider/provider.dart';
+// import 'package:provider/provider.dart';
 //import http package
 
 class HomeScreen extends StatefulWidget {
@@ -40,14 +39,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    var url = context.watch<ProfilePicProvider>().profilePic;
+    // var url = context.watch<ProfilePicProvider>().profilePic;
     //split the url using / and get the last element,
-    var lastElement = url.split('/').last;
+    // var lastElement = url.split('/').last;
 
     //network url, if the last element is profiles, put default image
-    var networkUrl = lastElement == 'profiles'
-        ? 'https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes-thumbnail.png'
-        : url;
+    // var networkUrl = lastElement == 'profiles'
+    //     ? 'https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes-thumbnail.png'
+    //     : url;
+    var networkUrl =
+        'https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes-thumbnail.png';
+
     return Scaffold(
       drawer: Drawer(
         width: size.width * 0.8,
@@ -55,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       appBar: AppBar(
         // leading: Icon(Icons.menu),
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color.fromARGB(255, 42, 129, 201),
         actions: [
           InkWell(
@@ -63,39 +66,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 return const CalendarScreen();
               }));
             },
-            child: InkWell(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return const CalendarScreen();
-                }));
-              },
-              child: Padding(
-                  padding: EdgeInsets.only(right: size.width * 0.06),
-                  child: const Icon(Icons.calendar_today,
-                      color: Colors.white, size: 30)),
-            ),
+            child: Padding(
+                padding: EdgeInsets.only(right: size.width * 0.06),
+                child: Icon(Icons.calendar_today,
+                    color: Colors.white, size: size.width * 0.06)),
           ),
           InkWell(
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return const SettingsScreen();
+                return const ProfileScreen();
               }));
             },
-            child: InkWell(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return const ProfileScreen();
-                }));
-              },
-              child: Padding(
-                padding: EdgeInsets.only(right: size.width * 0.06),
-                child: CircleAvatar(
-                  backgroundImage: NetworkImage(networkUrl),
-                  backgroundColor: Colors.white,
-                ),
+            child: Padding(
+              padding: EdgeInsets.only(right: size.width * 0.06),
+              child: CircleAvatar(
+                backgroundImage: NetworkImage(networkUrl),
+                backgroundColor: Colors.white,
               ),
             ),
-          )
+          ),
         ],
         elevation: 0,
       ),
