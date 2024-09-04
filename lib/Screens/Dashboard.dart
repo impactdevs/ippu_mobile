@@ -30,6 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<JobData> availableJobs = [];
   List<dynamic> upcomingCPDs = [];
   String latestCommunication = '';
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -110,6 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             .totalNumberOfEvents(totalEvents);
         Provider.of<UserProvider>(context, listen: false)
             .totalNumberOfCommunications(totalCommunications);
+        isLoading = false;
       });
     } catch (e) {
       log('Error fetching data: $e');
@@ -129,51 +131,76 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: const DrawerWidget(),
       ),
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2A81C9), Color(0xFF1E5F94)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+          iconTheme: const IconThemeData(color: Colors.white),
+          flexibleSpace: Stack(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF2A81C9), Color(0xFF1E5F94)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-      ),
-      body: Stack(
-        children: [
-          Container(
-            height: size.height * 0.4,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF2A81C9), Color(0xFF1E5F94)],
+          actions: [
+            Padding(
+              padding: EdgeInsets.only(right: size.height * 0.01),
+              child: Container(
+                padding: EdgeInsets.all(size.height * 0.016),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  DateFormat('MMM dd, yyyy').format(DateTime.now()),
+                  style: GoogleFonts.lato(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: size.width * 0.026,
+                  ),
+                ),
               ),
             ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(size),
-                  SizedBox(height: size.height * 0.02),
-                  _buildLatestEventCPD(size),
-                  SizedBox(height: size.height * 0.03),
-                  _buildSummaryCards(size),
-                  SizedBox(height: size.height * 0.03),
-                  _buildMainContent(size),
-                ],
-              ),
+          ]),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
+              children: [
+                Container(
+                  height: size.height * 0.4,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF2A81C9), Color(0xFF1E5F94)],
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(size),
+                        SizedBox(height: size.height * 0.02),
+                        _buildLatestEventCPD(size),
+                        SizedBox(height: size.height * 0.03),
+                        _buildSummaryCards(size),
+                        SizedBox(height: size.height * 0.03),
+                        _buildMainContent(size),
+                      ],
+                    ),
+                  ),
+                ),
+                if (subscriptionStatus == 'false')
+                  _buildSubscriptionNotification(size),
+                if (profileStatus != null && profileStatus)
+                  _buildProfileNotification(size),
+              ],
             ),
-          ),
-          if (subscriptionStatus == 'false')
-            _buildSubscriptionNotification(size),
-          if (profileStatus != null && profileStatus)
-            _buildProfileNotification(size),
-        ],
-      ),
     );
   }
 
@@ -444,16 +471,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Text(
                         cpd['topic'],
                         style: GoogleFonts.lato(
-                            fontSize: size.height * 0.02,
-                            fontWeight: FontWeight.bold),
+                          fontSize: size.height * 0.02,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: size.height * 0.0041),
                       Text(
-                        DateFormat('MMM dd, yyyy')
-                            .format(DateTime.parse(cpd['start_date'])),
-                        style: GoogleFonts.lato(fontSize: size.height * 0.016),
+                        'Date: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(cpd['start_date']))}',
+                        style: GoogleFonts.lato(
+                          fontSize: size.height * 0.016,
+                          color: Colors.black,
+                        ),
+                      ),
+                      SizedBox(height: size.height * 0.0041),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Duration: ${cpd['hours']} hours',
+                            style: GoogleFonts.lato(
+                              fontSize: size.height * 0.016,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                            '${cpd['points']} points',
+                            style: GoogleFonts.lato(
+                              fontSize: size.height * 0.016,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: size.height * 0.0041),
+                      Text(
+                        'Target Group: ${cpd['target_group']}',
+                        style: GoogleFonts.lato(
+                          fontSize: size.height * 0.016,
+                          color: Colors.black,
+                        ),
                       ),
                     ],
                   ),
