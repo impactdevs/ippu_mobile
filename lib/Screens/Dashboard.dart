@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
@@ -27,6 +28,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int totalCommunications = 0;
   List<dynamic> upcomingEvents = [];
   List<JobData> availableJobs = [];
+  List<dynamic> upcomingCPDs = [];
+  String latestCommunication = '';
 
   @override
   void initState() {
@@ -78,6 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final cpds = await authController.getCpds(userId);
       final events = await authController.getEvents(userId);
       final communications = await authController.getAllCommunications(userId);
+      log(communications.toString());
       final jobs = await fetchJobData();
 
       setState(() {
@@ -86,6 +90,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         availableJobs = jobs;
         totalJobs = jobs.length;
         totalCommunications = communications.length;
+        upcomingEvents = events
+            .where((event) =>
+                DateTime.parse(event['start_date']).isAfter(DateTime.now()))
+            .toList();
+        log(upcomingEvents.toString());
+        upcomingCPDs = cpds
+            .where((cpd) =>
+                DateTime.parse(cpd['start_date']).isAfter(DateTime.now()))
+            .toList();
+        log(upcomingCPDs.toString());
+        latestCommunication = communications.isNotEmpty
+            ? communications.first['message']
+            : 'No recent communications';
+
         Provider.of<UserProvider>(context, listen: false)
             .totalNumberOfCPDS(totalCPDS);
         Provider.of<UserProvider>(context, listen: false)
@@ -94,35 +112,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             .totalNumberOfCommunications(totalCommunications);
       });
     } catch (e) {
-      // Handle any errors here
+      log('Error fetching data: $e');
     }
   }
-
-  // Future<void> fetchData() async {
-  //   final userData = Provider.of<UserProvider>(context, listen: false).user;
-  //   int userId = userData!.id;
-  //   try {
-  //     AuthController authController = AuthController();
-  //     final cpds = await authController.getCpds(userId);
-  //     final events = await authController.getEvents(userId);
-  //     // Assuming you have methods to fetch jobs and education data
-  // Placeholder, replace with actual method
-  //     final education = []; // Placeholder, replace with actual method
-
-  //     setState(() {
-  //       totalCPDS = cpds.length;
-  //       totalEvents = events.length;
-  //       totalJobs = jobs.length;
-  //       totalCommunications = education.length;
-  //       upcomingEvents = events
-  //           .where(
-  //               (event) => DateTime.parse(event.date).isAfter(DateTime.now()))
-  //           .toList();
-  //     });
-  //   } catch (e) {
-  //     print('Error fetching data: $e');
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +143,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Stack(
         children: [
           Container(
-            height: size.height * 0.38,
+            height: size.height * 0.4,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -167,6 +159,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   _buildHeader(size),
                   SizedBox(height: size.height * 0.02),
+                  _buildLatestEventCPD(size),
+                  SizedBox(height: size.height * 0.03),
                   _buildSummaryCards(size),
                   SizedBox(height: size.height * 0.03),
                   _buildMainContent(size),
@@ -239,6 +233,239 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Stream<Duration> _countdownStream(DateTime endTime) {
+    return Stream.periodic(const Duration(seconds: 1), (_) {
+      final remaining = endTime.difference(DateTime.now());
+      return remaining > Duration.zero ? remaining : Duration.zero;
+    });
+  }
+
+  Widget _buildLatestEventCPD(Size size) {
+    final latestItem = upcomingEvents.isNotEmpty
+        ? upcomingEvents.first
+        : (upcomingCPDs.isNotEmpty ? upcomingCPDs.first : null);
+    if (latestItem == null) return const SizedBox.shrink();
+
+    final eventDate = DateTime.parse(latestItem['start_date']);
+
+    return Container(
+      margin: EdgeInsets.all(size.width * 0.04),
+      padding: EdgeInsets.all(size.width * 0.04),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Coming Soon:',
+            style: GoogleFonts.lato(
+              fontSize: size.height * 0.02,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            upcomingEvents.isEmpty ? latestItem['topic'] : latestItem['name'],
+            style: GoogleFonts.lato(
+              fontSize: size.height * 0.022,
+              color: Colors.black,
+            ),
+          ),
+          Text(
+            'Date: ${DateFormat('MMM dd, yyyy').format(eventDate)}',
+            style: GoogleFonts.lato(
+              fontSize: size.height * 0.018,
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(height: size.height * 0.016),
+          StreamBuilder<Duration>(
+            stream: _countdownStream(eventDate),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const SizedBox.shrink();
+              }
+              final duration = snapshot.data!;
+              final days = duration.inDays;
+              final hours = duration.inHours.remainder(24);
+              final minutes = duration.inMinutes.remainder(60);
+              return Text(
+                'Starts in: $days days : $hours hrs : $minutes mins',
+                style: GoogleFonts.lato(
+                  fontSize: size.height * 0.015,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  // TODO: Implement attend functionality
+                },
+                child: const Text('Attend'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // TODO: Implement view more functionality
+                },
+                child: const Text('View More'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isExpanded = false;
+
+  Widget _buildLatestCommunication(Size size) {
+    return Container(
+      margin: EdgeInsets.all(size.width * 0.04),
+      padding: EdgeInsets.all(size.width * 0.04),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Latest Communication',
+            style: GoogleFonts.lato(
+                fontSize: size.height * 0.022, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: size.height * 0.013),
+          AnimatedCrossFade(
+            firstChild: Html(
+              data: latestCommunication,
+              style: {
+                "body": Style(
+                  fontSize: FontSize(
+                    size.height * 0.018,
+                  ),
+                  maxLines: 3,
+                  textOverflow: TextOverflow.ellipsis,
+                  color: Colors.black,
+                ),
+              },
+            ),
+            secondChild: Html(
+              data: latestCommunication,
+              style: {
+                "body": Style(
+                  fontSize: FontSize(size.height * 0.018),
+                  color: Colors.black,
+                ),
+              },
+            ),
+            crossFadeState: _isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {
+                setState(() {
+                  _isExpanded = !_isExpanded;
+                });
+              },
+              child: Text(_isExpanded ? 'See Less' : 'See More'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingCPDs(Size size) {
+    return Container(
+      margin: EdgeInsets.all(size.width * 0.04),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Upcoming CPDs',
+            style: GoogleFonts.lato(
+                fontSize: size.height * 0.024, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: size.height * 0.15,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: upcomingCPDs.length,
+              itemBuilder: (context, index) {
+                final cpd = upcomingCPDs[index];
+                return Container(
+                  width: size.width * 0.6,
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.3),
+                        spreadRadius: 1,
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        cpd['topic'],
+                        style: GoogleFonts.lato(
+                            fontSize: size.height * 0.02,
+                            fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat('MMM dd, yyyy')
+                            .format(DateTime.parse(cpd['start_date'])),
+                        style: GoogleFonts.lato(fontSize: size.height * 0.016),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _summaryCard(
       String title, String count, IconData icon, Color color, Size size) {
     return Card(
@@ -295,8 +522,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           SizedBox(height: size.height * 0.04),
           _buildUserSummary(size),
           SizedBox(height: size.height * 0.04),
+          SizedBox(height: size.height * 0.03),
+          _buildLatestCommunication(size),
+          SizedBox(height: size.height * 0.03),
           _buildUpcomingEvents(size),
           SizedBox(height: size.height * 0.1),
+          _buildUpcomingCPDs(size),
         ],
       ),
     );
@@ -431,14 +662,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(event.title,
+                          Text(event['name'],
                               style: GoogleFonts.lato(
                                   fontSize: size.height * 0.018,
                                   fontWeight: FontWeight.bold)),
                           SizedBox(height: size.height * 0.005),
                           Text(
                               DateFormat('MMM dd, yyyy')
-                                  .format(DateTime.parse(event.date)),
+                                  .format(DateTime.parse(event['start_date'])),
                               style: GoogleFonts.lato(
                                   fontSize: size.height * 0.014,
                                   color: Colors.grey[600])),
