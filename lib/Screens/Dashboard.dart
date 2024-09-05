@@ -516,7 +516,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 300),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: size.height * 0.0019),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
