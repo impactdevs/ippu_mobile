@@ -4,7 +4,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:fl_chart/fl_chart.dart';
+// import 'package:fl_chart/fl_chart.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
 import 'package:ippu/models/JobData.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> upcomingCPDs = [];
   String latestCommunication = '';
   bool isLoading = true;
+  final formatter = NumberFormat('#,##0');
 
   @override
   void initState() {
@@ -91,15 +92,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
         availableJobs = jobs;
         totalJobs = jobs.length;
         totalCommunications = communications.length;
+        final now = DateTime.now();
         upcomingEvents = events
             .where((event) =>
                 DateTime.parse(event['start_date']).isAfter(DateTime.now()))
-            .toList();
+            .toList()
+          ..sort((a, b) {
+            DateTime dateA = DateTime.parse(a['start_date']);
+            DateTime dateB = DateTime.parse(b['start_date']);
+            return dateA.difference(now).compareTo(dateB.difference(now));
+          });
         log(upcomingEvents.toString());
+
         upcomingCPDs = cpds
-            .where((cpd) =>
-                DateTime.parse(cpd['start_date']).isAfter(DateTime.now()))
-            .toList();
+            .where((cpd) => DateTime.parse(cpd['start_date']).isAfter(now))
+            .toList()
+          ..sort((a, b) {
+            DateTime dateA = DateTime.parse(a['start_date']);
+            DateTime dateB = DateTime.parse(b['start_date']);
+            return dateA.difference(now).compareTo(dateB.difference(now));
+          });
         log(upcomingCPDs.toString());
         latestCommunication = communications.isNotEmpty
             ? communications.first['message']
@@ -188,8 +200,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         SizedBox(height: size.height * 0.02),
                         _buildLatestEventCPD(size),
                         SizedBox(height: size.height * 0.03),
-                        _buildSummaryCards(size),
-                        SizedBox(height: size.height * 0.03),
                         _buildMainContent(size),
                       ],
                     ),
@@ -240,25 +250,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSummaryCards(Size size) {
-    return SizedBox(
-      height: size.height * 0.18,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
-        children: [
-          _summaryCard('CPDs', totalCPDS.toString(), Icons.workspace_premium,
-              Colors.orange, size),
-          _summaryCard('Events', totalEvents.toString(), Icons.event,
-              Colors.purple, size),
-          _summaryCard(
-              'Jobs', totalJobs.toString(), Icons.work, Colors.green, size),
-          _summaryCard('Communications', totalCommunications.toString(),
-              Icons.radio, Colors.blue, size),
-        ],
-      ),
-    );
-  }
+  // Widget _buildSummaryCards(Size size) {
+  //   return SizedBox(
+  //     height: size.height * 0.18,
+  //     child: ListView(
+  //       scrollDirection: Axis.horizontal,
+  //       padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
+  //       children: [
+  //         _summaryCard('CPDs', totalCPDS.toString(), Icons.workspace_premium,
+  //             Colors.orange, size),
+  //         _summaryCard('Events', totalEvents.toString(), Icons.event,
+  //             Colors.purple, size),
+  //         _summaryCard(
+  //             'Jobs', totalJobs.toString(), Icons.work, Colors.green, size),
+  //         _summaryCard('Communications', totalCommunications.toString(),
+  //             Icons.radio, Colors.blue, size),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Stream<Duration> _countdownStream(DateTime endTime) {
     return Stream.periodic(const Duration(seconds: 1), (_) {
@@ -326,7 +336,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final hours = duration.inHours.remainder(24);
               final minutes = duration.inMinutes.remainder(60);
               return Text(
-                'Starts in: $days days : $hours hrs : $minutes mins',
+                days == 0
+                    ? 'Starts in: $hours hrs : $minutes mins'
+                    : days == 1
+                        ? 'Starts in: $days day : $hours hrs : $minutes mins'
+                        : 'Starts in: $days days : $hours hrs : $minutes mins',
                 style: GoogleFonts.lato(
                   fontSize: size.height * 0.015,
                   color: Colors.blue,
@@ -431,140 +445,194 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildUpcomingCPDs(Size size) {
-    return Container(
-      margin: EdgeInsets.all(size.width * 0.04),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Upcoming CPDs',
-            style: GoogleFonts.lato(
-                fontSize: size.height * 0.024, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: size.height * 0.15,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: upcomingCPDs.length,
-              itemBuilder: (context, index) {
-                final cpd = upcomingCPDs[index];
-                return Container(
-                  width: size.width * 0.6,
-                  margin: const EdgeInsets.only(right: 10),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        cpd['topic'],
-                        style: GoogleFonts.lato(
-                          fontSize: size.height * 0.02,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: size.height * 0.0041),
-                      Text(
-                        'Date: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(cpd['start_date']))}',
-                        style: GoogleFonts.lato(
-                          fontSize: size.height * 0.016,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(height: size.height * 0.0041),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Duration: ${cpd['hours']} hours',
-                            style: GoogleFonts.lato(
-                              fontSize: size.height * 0.016,
-                              color: Colors.black,
-                            ),
-                          ),
-                          Text(
-                            '${cpd['points']} points',
-                            style: GoogleFonts.lato(
-                              fontSize: size.height * 0.016,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: size.height * 0.0041),
-                      Text(
-                        'Target Group: ${cpd['target_group']}',
-                        style: GoogleFonts.lato(
-                          fontSize: size.height * 0.016,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryCard(
-      String title, String count, IconData icon, Color color, Size size) {
-    return Card(
-      elevation: 8, // Added elevation
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
+    return Padding(
+      padding: EdgeInsets.all(size.width * 0.04),
       child: Container(
-        width: size.width * 0.28, // Reduced width
-        height: size.height * 0.15, // Added fixed height
-        padding: EdgeInsets.all(size.width * 0.02),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-        ),
+        margin: EdgeInsets.all(size.width * 0.04),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon,
-                size: size.height * 0.035, color: color), // Reduced icon size
-            SizedBox(height: size.height * 0.01),
-            Text(count,
-                style: GoogleFonts.lato(
-                    fontSize: size.height * 0.028, // Reduced font size
-                    fontWeight: FontWeight.bold,
-                    color: color)),
-            SizedBox(height: size.height * 0.005),
             Text(
-              title,
+              'Upcoming CPDs',
               style: GoogleFonts.lato(
-                  fontSize: size.height * 0.014, // Reduced font size
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
+                fontSize: size.height * 0.024,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
+              ),
+            ),
+            SizedBox(height: size.height * 0.02),
+            SizedBox(
+              height: size.height * 0.2,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: upcomingCPDs.length,
+                itemBuilder: (context, index) {
+                  final cpd = upcomingCPDs[index];
+                  return Container(
+                    width: size.width * 0.7,
+                    margin: EdgeInsets.only(right: size.width * 0.04),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.02,
+                              vertical: size.height * 0.004,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[600],
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(15),
+                                bottomLeft: Radius.circular(15),
+                              ),
+                            ),
+                            child: Text(
+                              '${cpd['points']} points',
+                              style: GoogleFonts.lato(
+                                fontSize: size.height * 0.016,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(size.width * 0.04),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                cpd['topic'],
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.019,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[800],
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: size.height * 0.01),
+                              Row(
+                                children: [
+                                  Icon(Icons.calendar_today,
+                                      size: size.height * 0.02,
+                                      color: Colors.blue[600]),
+                                  SizedBox(width: size.width * 0.01),
+                                  Text(
+                                    DateFormat('MMM dd, yyyy').format(
+                                        DateTime.parse(cpd['start_date'])),
+                                    style: GoogleFonts.lato(
+                                      fontSize: size.height * 0.016,
+                                      color: Colors.blue[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: size.height * 0.008),
+                              Row(
+                                children: [
+                                  Icon(Icons.access_time,
+                                      size: size.height * 0.02,
+                                      color: Colors.blue[600]),
+                                  SizedBox(width: size.width * 0.01),
+                                  Text(
+                                    'Duration: ${cpd['hours']} hours',
+                                    style: GoogleFonts.lato(
+                                      fontSize: size.height * 0.016,
+                                      color: Colors.blue[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: size.height * 0.008),
+                              Row(
+                                children: [
+                                  Icon(Icons.group,
+                                      size: size.height * 0.02,
+                                      color: Colors.blue[600]),
+                                  SizedBox(width: size.width * 0.01),
+                                  Expanded(
+                                    child: Text(
+                                      'Target: ${cpd['target_group']}',
+                                      style: GoogleFonts.lato(
+                                        fontSize: size.height * 0.016,
+                                        color: Colors.blue[600],
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
+  // Widget _summaryCard(
+  //     String title, String count, IconData icon, Color color, Size size) {
+  //   return Card(
+  //     elevation: 8, // Added elevation
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.circular(15),
+  //     ),
+  //     child: Container(
+  //       width: size.width * 0.28, // Reduced width
+  //       height: size.height * 0.15, // Added fixed height
+  //       padding: EdgeInsets.all(size.width * 0.02),
+  //       decoration: BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.circular(15),
+  //       ),
+  //       child: Column(
+  //         mainAxisAlignment: MainAxisAlignment.center,
+  //         children: [
+  //           Icon(icon,
+  //               size: size.height * 0.035, color: color), // Reduced icon size
+  //           SizedBox(height: size.height * 0.01),
+  //           Text(count,
+  //               style: GoogleFonts.lato(
+  //                   fontSize: size.height * 0.028, // Reduced font size
+  //                   fontWeight: FontWeight.bold,
+  //                   color: color)),
+  //           SizedBox(height: size.height * 0.005),
+  //           Text(
+  //             title,
+  //             style: GoogleFonts.lato(
+  //                 fontSize: size.height * 0.014, // Reduced font size
+  //                 color: Colors.grey[600],
+  //                 fontWeight: FontWeight.w500),
+  //             textAlign: TextAlign.center,
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildMainContent(Size size) {
     return Container(
@@ -578,177 +646,416 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Column(
         children: [
-          SizedBox(height: size.height * 0.04),
-          _buildUserSummary(size),
-          SizedBox(height: size.height * 0.04),
-          SizedBox(height: size.height * 0.03),
           _buildLatestCommunication(size),
-          SizedBox(height: size.height * 0.03),
+          SizedBox(height: size.height * 0.02),
           _buildUpcomingEvents(size),
-          SizedBox(height: size.height * 0.1),
           _buildUpcomingCPDs(size),
+          _buildHotJobs(size),
         ],
       ),
     );
   }
 
-  Widget _buildUserSummary(Size size) {
-    return Container(
-      padding: EdgeInsets.all(size.width * 0.06),
-      margin: EdgeInsets.symmetric(horizontal: size.width * 0.06),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Activity Summary',
+  Widget _buildHotJobs(Size size) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+      child: Container(
+        margin: EdgeInsets.all(size.width * 0.03),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hot Jobs',
               style: GoogleFonts.lato(
-                  fontSize: size.height * 0.026, fontWeight: FontWeight.bold)),
-          SizedBox(height: size.height * 0.03),
-          SizedBox(
-            height: size.height * 0.3,
-            child: PieChart(
-              PieChartData(
-                sectionsSpace: 2,
-                centerSpaceRadius: 50,
-                sections: [
-                  PieChartSectionData(
-                    value: totalCPDS.toDouble(),
-                    color: Colors.orange,
-                    title: 'CPDs',
-                    titleStyle: GoogleFonts.lato(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: size.height * 0.016),
-                    radius: 80,
-                  ),
-                  PieChartSectionData(
-                    value: totalEvents.toDouble(),
-                    color: Colors.purple,
-                    title: 'Events',
-                    titleStyle: GoogleFonts.lato(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: size.height * 0.016),
-                    radius: 80,
-                  ),
-                  PieChartSectionData(
-                    value: totalJobs.toDouble(),
-                    color: Colors.green,
-                    title: 'Jobs',
-                    titleStyle: GoogleFonts.lato(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: size.height * 0.016),
-                    radius: 80,
-                  ),
-                  PieChartSectionData(
-                    value: totalCommunications.toDouble(),
-                    color: Colors.blue,
-                    title: 'Communications',
-                    titleStyle: GoogleFonts.lato(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: size.height * 0.016),
-                    radius: 80,
-                  ),
-                ],
+                fontSize: size.height * 0.024,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUpcomingEvents(Size size) {
-    return Container(
-      padding: EdgeInsets.all(size.width * 0.06),
-      margin: EdgeInsets.symmetric(horizontal: size.width * 0.06),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Upcoming Events',
-              style: GoogleFonts.lato(
-                  fontSize: size.height * 0.026, fontWeight: FontWeight.bold)),
-          SizedBox(height: size.height * 0.02),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: upcomingEvents.length > 3 ? 3 : upcomingEvents.length,
-            itemBuilder: (context, index) {
-              final event = upcomingEvents[index];
-              return Container(
-                margin: EdgeInsets.only(bottom: size.height * 0.02),
-                padding: EdgeInsets.all(size.width * 0.04),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(size.width * 0.02),
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(Icons.event,
-                          color: Colors.white, size: size.height * 0.03),
+            SizedBox(height: size.height * 0.01),
+            if (availableJobs.isNotEmpty)
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: availableJobs.length > 3 ? 3 : availableJobs.length,
+                itemBuilder: (context, index) {
+                  final job = availableJobs[index];
+                  return Container(
+                    margin: EdgeInsets.only(bottom: size.height * 0.01),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    SizedBox(width: size.width * 0.04),
-                    Expanded(
-                      child: Column(
+                    child: Padding(
+                      padding: EdgeInsets.all(size.width * 0.04),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(event['name'],
-                              style: GoogleFonts.lato(
-                                  fontSize: size.height * 0.018,
-                                  fontWeight: FontWeight.bold)),
-                          SizedBox(height: size.height * 0.005),
-                          Text(
-                              DateFormat('MMM dd, yyyy')
-                                  .format(DateTime.parse(event['start_date'])),
-                              style: GoogleFonts.lato(
-                                  fontSize: size.height * 0.014,
-                                  color: Colors.grey[600])),
+                          Container(
+                            padding: EdgeInsets.all(size.width * 0.03),
+                            decoration: BoxDecoration(
+                              color: Colors.orange[600],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.work,
+                              color: Colors.white,
+                              size: size.height * 0.03,
+                            ),
+                          ),
+                          SizedBox(width: size.width * 0.04),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  job.title,
+                                  style: GoogleFonts.lato(
+                                    fontSize: size.height * 0.019,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue[800],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: size.height * 0.007),
+                                Row(
+                                  children: [
+                                    Icon(Icons.calendar_today,
+                                        size: size.height * 0.02,
+                                        color: Colors.orange[600]),
+                                    SizedBox(width: size.width * 0.01),
+                                    // Text(
+                                    //   'Deadline: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(job['deadline']))}',
+                                    //   style: GoogleFonts.lato(
+                                    //     fontSize: size.height * 0.016,
+                                    //     color: Colors.orange[600],
+                                    //   ),
+                                    // ),
+                                  ],
+                                ),
+                                SizedBox(height: size.height * 0.01),
+                                Text(
+                                  job.description,
+                                  style: GoogleFonts.lato(
+                                    fontSize: size.height * 0.015,
+                                    color: Colors.grey[600],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
+                  );
+                },
+              )
+            else
+              Container(
+                padding: EdgeInsets.all(size.width * 0.04),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
-              );
-            },
-          ),
-          if (upcomingEvents.isEmpty)
-            Center(
-              child: Text(
-                'No upcoming events',
-                style: GoogleFonts.lato(
-                    fontSize: size.height * 0.018, color: Colors.grey[600]),
+                child: Center(
+                  child: Text(
+                    'No hot jobs available',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.018,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget _buildUserSummary(Size size) {
+  //   return Container(
+  //     padding: EdgeInsets.all(size.width * 0.06),
+  //     margin: EdgeInsets.symmetric(horizontal: size.width * 0.06),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(20),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.05),
+  //           blurRadius: 15,
+  //           offset: const Offset(0, 5),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Text('Activity Summary',
+  //             style: GoogleFonts.lato(
+  //                 fontSize: size.height * 0.026, fontWeight: FontWeight.bold)),
+  //         SizedBox(height: size.height * 0.03),
+  //         SizedBox(
+  //           height: size.height * 0.3,
+  //           child: PieChart(
+  //             PieChartData(
+  //               sectionsSpace: 2,
+  //               centerSpaceRadius: 50,
+  //               sections: [
+  //                 PieChartSectionData(
+  //                   value: totalCPDS.toDouble(),
+  //                   color: Colors.orange,
+  //                   title: 'CPDs',
+  //                   titleStyle: GoogleFonts.lato(
+  //                       color: Colors.white,
+  //                       fontWeight: FontWeight.bold,
+  //                       fontSize: size.height * 0.016),
+  //                   radius: 80,
+  //                 ),
+  //                 PieChartSectionData(
+  //                   value: totalEvents.toDouble(),
+  //                   color: Colors.purple,
+  //                   title: 'Events',
+  //                   titleStyle: GoogleFonts.lato(
+  //                       color: Colors.white,
+  //                       fontWeight: FontWeight.bold,
+  //                       fontSize: size.height * 0.016),
+  //                   radius: 80,
+  //                 ),
+  //                 PieChartSectionData(
+  //                   value: totalJobs.toDouble(),
+  //                   color: Colors.green,
+  //                   title: 'Jobs',
+  //                   titleStyle: GoogleFonts.lato(
+  //                       color: Colors.white,
+  //                       fontWeight: FontWeight.bold,
+  //                       fontSize: size.height * 0.016),
+  //                   radius: 80,
+  //                 ),
+  //                 PieChartSectionData(
+  //                   value: totalCommunications.toDouble(),
+  //                   color: Colors.blue,
+  //                   title: 'Communications',
+  //                   titleStyle: GoogleFonts.lato(
+  //                       color: Colors.white,
+  //                       fontWeight: FontWeight.bold,
+  //                       fontSize: size.height * 0.016),
+  //                   radius: 80,
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget _buildUpcomingEvents(Size size) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+      child: Container(
+        margin: EdgeInsets.all(size.width * 0.03),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Upcoming Events',
+              style: GoogleFonts.lato(
+                fontSize: size.height * 0.024,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
               ),
             ),
-        ],
+            SizedBox(height: size.height * 0.01),
+            if (upcomingEvents.isNotEmpty)
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount:
+                    upcomingEvents.length > 3 ? 3 : upcomingEvents.length,
+                itemBuilder: (context, index) {
+                  final event = upcomingEvents[index];
+                  return Container(
+                    margin: EdgeInsets.only(bottom: size.height * 0.01),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(size.width * 0.04),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(size.width * 0.03),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[600],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.event,
+                                  color: Colors.white,
+                                  size: size.height * 0.03,
+                                ),
+                              ),
+                              SizedBox(width: size.width * 0.04),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      event['name'],
+                                      style: GoogleFonts.lato(
+                                        fontSize: size.height * 0.019,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue[800],
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    SizedBox(height: size.height * 0.007),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.calendar_today,
+                                            size: size.height * 0.02,
+                                            color: Colors.blue[600]),
+                                        SizedBox(width: size.width * 0.01),
+                                        Text(
+                                          DateFormat('MMM dd, yyyy').format(
+                                              DateTime.parse(
+                                                  event['start_date'])),
+                                          style: GoogleFonts.lato(
+                                            fontSize: size.height * 0.016,
+                                            color: Colors.blue[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: size.height * 0.01),
+                                    Text(
+                                      'Rate: UGX. ${formatter.format(double.parse(event['rate']))}',
+                                      style: GoogleFonts.lato(
+                                        fontSize: size.height * 0.015,
+                                        color: Colors.blue[800],
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (event['location'] != null) ...[
+                                      SizedBox(height: size.height * 0.008),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.location_on,
+                                              size: size.height * 0.02,
+                                              color: Colors.blue[600]),
+                                          SizedBox(width: size.width * 0.01),
+                                          Expanded(
+                                            child: Text(
+                                              event['location'],
+                                              style: GoogleFonts.lato(
+                                                fontSize: size.height * 0.016,
+                                                color: Colors.blue[600],
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.02,
+                              vertical: size.height * 0.005,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[800],
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(15),
+                                bottomLeft: Radius.circular(15),
+                              ),
+                            ),
+                            child: Text(
+                              '${event['points']} points',
+                              style: GoogleFonts.lato(
+                                fontSize: size.height * 0.014,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              )
+            else
+              Container(
+                padding: EdgeInsets.all(size.width * 0.04),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'No upcoming events',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.018,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
