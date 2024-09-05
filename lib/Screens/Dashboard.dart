@@ -182,7 +182,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           : Stack(
               children: [
                 Container(
-                  height: size.height * 0.4,
+                  height: size.height * 0.5,
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -284,88 +284,181 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (latestItem == null) return const SizedBox.shrink();
 
     final eventDate = DateTime.parse(latestItem['start_date']);
+    final isEvent = upcomingEvents.isNotEmpty;
 
     return Container(
-      margin: EdgeInsets.all(size.width * 0.04),
-      padding: EdgeInsets.all(size.width * 0.04),
+      margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
+            color: Colors.blue.withOpacity(0.1),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Coming Soon:',
-            style: GoogleFonts.lato(
-              fontSize: size.height * 0.02,
-              fontWeight: FontWeight.bold,
+          Container(
+            padding: EdgeInsets.all(size.width * 0.04),
+            decoration: BoxDecoration(
+              color: isEvent ? Colors.blue[600] : Colors.orange[600],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
             ),
-          ),
-          Text(
-            upcomingEvents.isEmpty ? latestItem['topic'] : latestItem['name'],
-            style: GoogleFonts.lato(
-              fontSize: size.height * 0.022,
-              color: Colors.black,
-            ),
-          ),
-          Text(
-            'Date: ${DateFormat('MMM dd, yyyy').format(eventDate)}',
-            style: GoogleFonts.lato(
-              fontSize: size.height * 0.018,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(height: size.height * 0.016),
-          StreamBuilder<Duration>(
-            stream: _countdownStream(eventDate),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const SizedBox.shrink();
-              }
-              final duration = snapshot.data!;
-              final days = duration.inDays;
-              final hours = duration.inHours.remainder(24);
-              final minutes = duration.inMinutes.remainder(60);
-              return Text(
-                days == 0
-                    ? 'Starts in: $hours hrs : $minutes mins'
-                    : days == 1
-                        ? 'Starts in: $days day : $hours hrs : $minutes mins'
-                        : 'Starts in: $days days : $hours hrs : $minutes mins',
-                style: GoogleFonts.lato(
-                  fontSize: size.height * 0.015,
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
+            child: Row(
+              children: [
+                Icon(
+                  isEvent ? Icons.event : Icons.school,
+                  color: Colors.white,
+                  size: size.height * 0.03,
                 ),
-              );
-            },
+                SizedBox(width: size.width * 0.02),
+                Text(
+                  isEvent ? 'Event Coming Soon' : 'CPD Coming Soon',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.019,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement attend functionality
-                },
-                child: const Text('Attend'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement view more functionality
-                },
-                child: const Text('View More'),
-              ),
-            ],
+          Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.04, vertical: size.width * 0.04),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEvent ? latestItem['name'] : latestItem['topic'],
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.019,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[800],
+                  ),
+                ),
+                SizedBox(height: size.height * 0.007),
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today,
+                        size: size.height * 0.02, color: Colors.blue[600]),
+                    SizedBox(width: size.width * 0.01),
+                    Text(
+                      DateFormat('MMM dd, yyyy').format(eventDate),
+                      style: GoogleFonts.lato(
+                        fontSize: size.height * 0.016,
+                        color: Colors.blue[600],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: size.height * 0.01),
+                StreamBuilder<Duration>(
+                  stream: _countdownStream(eventDate),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const SizedBox.shrink();
+                    }
+                    final duration = snapshot.data!;
+                    final days = duration.inDays;
+                    final hours = duration.inHours.remainder(24);
+                    final minutes = duration.inMinutes.remainder(60);
+                    return Container(
+                      padding: EdgeInsets.symmetric(
+                        vertical: size.height * 0.01,
+                        horizontal: size.width * 0.02,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.timer,
+                            size: size.height * 0.02,
+                            color: Colors.blue[600],
+                          ),
+                          SizedBox(width: size.width * 0.01),
+                          Text(
+                            days == 0
+                                ? 'Starts in: $hours hrs : $minutes mins'
+                                : days == 1
+                                    ? 'Starts in: $days day : $hours hrs : $minutes mins'
+                                    : 'Starts in: $days days : $hours hrs : $minutes mins',
+                            style: GoogleFonts.lato(
+                                fontSize: size.height * 0.016,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[600]),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: size.height * 0.01),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // TODO: Implement attend functionality
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[600],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              vertical: size.height * 0.015),
+                        ),
+                        child: Text(
+                          'Attend',
+                          style: GoogleFonts.lato(
+                            fontSize: size.height * 0.018,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: size.width * 0.03),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          // TODO: Implement view more functionality
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.blue[600]!),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              vertical: size.height * 0.015),
+                        ),
+                        child: Text(
+                          'View More',
+                          style: GoogleFonts.lato(
+                            fontSize: size.height * 0.018,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue[600],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
