@@ -4,11 +4,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ippu/Providers/ProfilePicProvider.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
 import 'package:ippu/Providers/network.dart';
-import 'package:ippu/Screens/CommunicationScreen.dart';
-import 'package:ippu/Screens/CpdsScreen.dart';
 import 'package:ippu/Screens/Dashboard.dart';
 // import 'package:ippu/Screens/HomeScreen.dart';
-import 'package:ippu/Screens/EventsScreen.dart';
+import 'package:ippu/Screens/JobsScreen.dart';
+import 'package:ippu/Screens/ProfileScreen.dart';
 import 'package:ippu/Screens/animated_text.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/UserData.dart';
@@ -126,9 +125,9 @@ class _DefaultScreenState extends State<DefaultScreen> {
   int _selectedIndex = 0;
   List Page = [
     const DashboardScreen(),
-    const CpdsScreen(),
-    const EventsScreen(),
-    const CommunicationScreen(),
+    const JobsScreen(),
+    const JobsScreen(),
+    const ProfileScreen(),
   ];
   void onItemTapped(int index) {
     setState(() {
@@ -171,11 +170,11 @@ class _DefaultScreenState extends State<DefaultScreen> {
               items: const <BottomNavigationBarItem>[
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.workspace_premium), label: 'CPD'),
+                    icon: Icon(Icons.workspace_premium), label: 'Jobs'),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.event), label: 'Events'),
+                    icon: Icon(Icons.notifications), label: 'Notifications'),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.info), label: 'Communication'),
+                    icon: Icon(Icons.person), label: 'Profile'),
               ],
             ),
           );

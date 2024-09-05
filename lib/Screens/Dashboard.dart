@@ -6,6 +6,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 // import 'package:fl_chart/fl_chart.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
+import 'package:ippu/Widgets/HomeScreenWidgets/CalendarScreen.dart';
 import 'package:ippu/models/JobData.dart';
 import 'package:provider/provider.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
@@ -144,6 +145,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       appBar: AppBar(
           iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            'IPPU MEMBERSHIP APP',
+            style: GoogleFonts.lato(
+              fontSize: size.height * 0.020,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
           flexibleSpace: Stack(
             children: [
               Container(
@@ -158,23 +168,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           actions: [
-            Padding(
-              padding: EdgeInsets.only(right: size.height * 0.01),
-              child: Container(
-                padding: EdgeInsets.all(size.height * 0.016),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  DateFormat('MMM dd, yyyy').format(DateTime.now()),
-                  style: GoogleFonts.lato(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: size.width * 0.026,
-                  ),
-                ),
-              ),
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const CalendarScreen()));
+              },
+              icon: const Icon(Icons.calendar_month),
             ),
           ]),
       body: isLoading
@@ -227,7 +228,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 'Welcome back,',
                 style: GoogleFonts.lato(
-                    color: Colors.white, fontSize: size.height * 0.022),
+                    color: Colors.white, fontSize: size.height * 0.020),
               ),
               SizedBox(height: size.height * 0.005),
               Text(
@@ -239,11 +240,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ],
-          ),
-          CircleAvatar(
-            radius: size.width * 0.07,
-            backgroundImage: const NetworkImage(
-                'https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes-thumbnail.png'),
           ),
         ],
       ),
@@ -391,10 +387,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           SizedBox(width: size.width * 0.01),
                           Text(
                             days == 0
-                                ? 'Starts in: $hours hrs : $minutes mins'
+                                ? 'Starts in: $hours hrs and $minutes mins'
                                 : days == 1
-                                    ? 'Starts in: $days day : $hours hrs : $minutes mins'
-                                    : 'Starts in: $days days : $hours hrs : $minutes mins',
+                                    ? 'Starts in: $days day, $hours hrs and $minutes mins'
+                                    : 'Starts in: $days days, $hours hrs and $minutes mins',
                             style: GoogleFonts.lato(
                                 fontSize: size.height * 0.016,
                                 fontWeight: FontWeight.bold,
