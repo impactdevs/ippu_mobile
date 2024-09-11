@@ -42,6 +42,13 @@ class _ProfileScreenState extends State<ProfileScreen>
         child: const DrawerWidget(),
       ),
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Profile',
           style: TextStyle(color: Colors.white),
@@ -91,8 +98,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Add content for Info tab here     
-            
+                // Add content for Info tab here
+
                 SizedBox(
                     height: size.height * 0.9,
                     width: double.maxFinite,
@@ -116,8 +123,6 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     );
   }
-
-
 
   void showBottomNotification(String message) {
     Fluttertoast.showToast(
