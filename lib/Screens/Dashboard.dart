@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:ippu/Screens/CpdsScreen.dart';
 import 'package:ippu/Screens/EventsScreen.dart';
 import 'package:ippu/Screens/JobsScreen.dart';
+import 'package:ippu/Screens/ProfileScreen.dart';
 import 'package:ippu/Widgets/CommunicationScreenWidgets/SingleCommunicationDisplayScreen.dart';
 // import 'package:fl_chart/fl_chart.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
@@ -209,15 +210,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         SizedBox(height: size.height * 0.02),
                         _buildLatestEventCPD(size),
                         SizedBox(height: size.height * 0.03),
-                        _buildMainContent(size),
+                        _buildMainContent(
+                            size, subscriptionStatus, profileStatus),
                       ],
                     ),
                   ),
                 ),
-                if (subscriptionStatus == 'false')
-                  _buildSubscriptionNotification(size),
-                if (profileStatus != null && profileStatus)
-                  _buildProfileNotification(size),
+                // if (subscriptionStatus == 'false')
+                //   _buildSubscriptionNotification(size),
+                // if (profileStatus != null && profileStatus)
+                //   _buildProfileNotification(size),
               ],
             ),
     );
@@ -691,7 +693,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMainContent(Size size) {
+  Widget _buildMainContent(Size size, subscriptionStatus, profileStatus) {
     return Container(
       width: size.width,
       decoration: BoxDecoration(
@@ -707,6 +709,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           SizedBox(height: size.height * 0.02),
           _buildUpcomingEvents(size),
           _buildUpcomingCPDs(size),
+          _buildWarningCards(size, subscriptionStatus, profileStatus),
           _buildHotJobs(size),
         ],
       ),
@@ -1077,67 +1080,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSubscriptionNotification(Size size) {
-    return Positioned(
-      bottom: size.height * 0.02,
-      left: size.width * 0.04,
-      right: size.width * 0.04,
-      child: Container(
-        height: size.height * 0.075,
-        decoration: BoxDecoration(
-          color: const Color(0xFFFF7676),
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            "Please complete your subscription",
-            style: GoogleFonts.lato(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: size.height * 0.018,
-            ),
+  // if (subscriptionStatus == 'false')
+  //   _buildSubscriptionNotification(size),
+  // if (profileStatus != null && profileStatus)
+  //   _buildProfileNotification(size),
+
+  Widget _buildWarningCards(Size size, subscriptionStatus, profileStatus) {
+    return Column(
+      children: [
+        if (profileStatus != null && profileStatus)
+          _buildWarningCard(
+            size,
+            "Please complete your profile",
+            () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ProfileScreen()));
+            },
           ),
-        ),
-      ),
+        if (subscriptionStatus == 'false')
+          _buildWarningCard(
+            size,
+            "Please complete your subscription",
+            () {
+              // Add navigation to subscription page
+            },
+          ),
+      ],
     );
   }
 
-  Widget _buildProfileNotification(Size size) {
-    return Positioned(
-      bottom: size.height * 0.11,
-      left: size.width * 0.04,
-      right: size.width * 0.04,
-      child: Container(
-        height: size.height * 0.075,
-        decoration: BoxDecoration(
-          color: const Color(0xFFFF7676),
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            "Please complete your profile",
-            style: GoogleFonts.lato(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: size.height * 0.018,
-            ),
+  Widget _buildWarningCard(Size size, String message, VoidCallback onPressed) {
+    return Padding(
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: size.height * 0.01),
+          padding: EdgeInsets.all(size.width * 0.03),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFF7676),
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-        ),
-      ),
-    );
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  message,
+                  style: GoogleFonts.lato(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: size.height * 0.018,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: onPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  'Complete',
+                  style: GoogleFonts.lato(
+                    color: const Color(0xFFFF7676),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ));
   }
 }
