@@ -241,15 +241,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     color: Colors.white, fontSize: size.height * 0.020),
               ),
               SizedBox(height: size.height * 0.005),
-              Text(
-                userData!.name,
-                style: GoogleFonts.lato(
-                  color: Colors.white,
-                  fontSize: size.height * 0.032,
-                  fontWeight: FontWeight.bold,
+              SizedBox(
+                width: size.width * 0.7, // Adjust this value as needed
+                child: Text(
+                  userData!.name,
+                  style: GoogleFonts.lato(
+                    color: Colors.white,
+                    fontSize: size.height * 0.032,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
               ),
             ],
           ),
@@ -456,10 +459,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Latest Communication',
-                style: GoogleFonts.lato(
-                    fontSize: size.height * 0.022, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  'Latest Communication',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.022,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               TextButton(
                 onPressed: () {
