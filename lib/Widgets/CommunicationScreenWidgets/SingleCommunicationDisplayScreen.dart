@@ -24,6 +24,7 @@ class _SingleCommunicationDisplayScreenState
     final size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color.fromARGB(255, 42, 129, 201),
         title: Padding(
             padding: EdgeInsets.only(

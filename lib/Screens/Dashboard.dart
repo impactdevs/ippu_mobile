@@ -4,6 +4,10 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ippu/Screens/CpdsScreen.dart';
+import 'package:ippu/Screens/EventsScreen.dart';
+import 'package:ippu/Screens/JobsScreen.dart';
+import 'package:ippu/Widgets/CommunicationScreenWidgets/SingleCommunicationDisplayScreen.dart';
 // import 'package:fl_chart/fl_chart.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/CalendarScreen.dart';
@@ -33,6 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String latestCommunication = '';
   bool isLoading = true;
   final formatter = NumberFormat('#,##0');
+  var latestComm = {};
 
   @override
   void initState() {
@@ -114,6 +119,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             return dateA.difference(now).compareTo(dateB.difference(now));
           });
         log(upcomingCPDs.toString());
+        latestComm = communications.isNotEmpty
+            ? communications.first
+            : {'message': 'No recent communications'};
         latestCommunication = communications.isNotEmpty
             ? communications.first['message']
             : 'No recent communications';
@@ -238,6 +246,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontSize: size.height * 0.032,
                   fontWeight: FontWeight.bold,
                 ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ],
           ),
@@ -245,26 +255,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
-  // Widget _buildSummaryCards(Size size) {
-  //   return SizedBox(
-  //     height: size.height * 0.18,
-  //     child: ListView(
-  //       scrollDirection: Axis.horizontal,
-  //       padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
-  //       children: [
-  //         _summaryCard('CPDs', totalCPDS.toString(), Icons.workspace_premium,
-  //             Colors.orange, size),
-  //         _summaryCard('Events', totalEvents.toString(), Icons.event,
-  //             Colors.purple, size),
-  //         _summaryCard(
-  //             'Jobs', totalJobs.toString(), Icons.work, Colors.green, size),
-  //         _summaryCard('Communications', totalCommunications.toString(),
-  //             Icons.radio, Colors.blue, size),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Stream<Duration> _countdownStream(DateTime endTime) {
     return Stream.periodic(const Duration(seconds: 1), (_) {
@@ -418,35 +408,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               vertical: size.height * 0.015),
                         ),
                         child: Text(
-                          'Attend',
+                          'Book for Attendance',
                           style: GoogleFonts.lato(
                             fontSize: size.height * 0.018,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: size.width * 0.03),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          // TODO: Implement view more functionality
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.blue[600]!),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                              vertical: size.height * 0.015),
-                        ),
-                        child: Text(
-                          'View More',
-                          style: GoogleFonts.lato(
-                            fontSize: size.height * 0.018,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[600],
                           ),
                         ),
                       ),
@@ -461,8 +427,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  bool _isExpanded = false;
-  bool _isJobExpanded = false;
+  String extractDate(String fullDate) {
+    List<String> parts = fullDate.split('T');
+    return parts[0];
+  }
 
   Widget _buildLatestCommunication(Size size) {
     return Container(
@@ -483,51 +451,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Latest Communication',
-            style: GoogleFonts.lato(
-                fontSize: size.height * 0.022, fontWeight: FontWeight.bold),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Latest Communication',
+                style: GoogleFonts.lato(
+                    fontSize: size.height * 0.022, fontWeight: FontWeight.bold),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return SingleCommunicationDisplayScreen(
+                      communicationtitle: latestComm['title'],
+                      communicationbody: latestComm['message'],
+                      communicationdate: extractDate(latestComm['created_at']),
+                    );
+                  }));
+                },
+                child: Text(
+                  'Read More',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.015,
+                    color: Colors.blue[600],
+                  ),
+                ),
+              ),
+            ],
           ),
           SizedBox(height: size.height * 0.013),
-          AnimatedCrossFade(
-            firstChild: Html(
-              data: latestCommunication,
-              style: {
-                "body": Style(
-                  fontSize: FontSize(
-                    size.height * 0.018,
-                  ),
-                  maxLines: 3,
-                  textOverflow: TextOverflow.ellipsis,
-                  color: Colors.black,
-                ),
-              },
-            ),
-            secondChild: Html(
-              data: latestCommunication,
-              style: {
-                "body": Style(
-                  fontSize: FontSize(size.height * 0.018),
-                  color: Colors.black,
-                ),
-              },
-            ),
-            crossFadeState: _isExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 300),
-          ),
-          SizedBox(height: size.height * 0.0019),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {
-                setState(() {
-                  _isExpanded = !_isExpanded;
-                });
-              },
-              child: Text(_isExpanded ? 'See Less' : 'See More'),
-            ),
+          Html(
+            data: latestCommunication,
+            style: {
+              "body": Style(
+                fontSize: FontSize(size.height * 0.018),
+                maxLines: 3,
+                textOverflow: TextOverflow.ellipsis,
+                color: Colors.black,
+              ),
+            },
           ),
         ],
       ),
@@ -542,13 +504,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Upcoming CPDs',
-              style: GoogleFonts.lato(
-                fontSize: size.height * 0.024,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue[800],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Upcoming CPDs',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.024,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[800],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const CpdsScreen()));
+                  },
+                  child: Text(
+                    'View More',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.015,
+                      color: Colors.blue[600],
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: size.height * 0.02),
             if (upcomingCPDs.isNotEmpty)
@@ -709,47 +691,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Widget _summaryCard(
-  //     String title, String count, IconData icon, Color color, Size size) {
-  //   return Card(
-  //     elevation: 8, // Added elevation
-  //     shape: RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.circular(15),
-  //     ),
-  //     child: Container(
-  //       width: size.width * 0.28, // Reduced width
-  //       height: size.height * 0.15, // Added fixed height
-  //       padding: EdgeInsets.all(size.width * 0.02),
-  //       decoration: BoxDecoration(
-  //         color: Colors.white,
-  //         borderRadius: BorderRadius.circular(15),
-  //       ),
-  //       child: Column(
-  //         mainAxisAlignment: MainAxisAlignment.center,
-  //         children: [
-  //           Icon(icon,
-  //               size: size.height * 0.035, color: color), // Reduced icon size
-  //           SizedBox(height: size.height * 0.01),
-  //           Text(count,
-  //               style: GoogleFonts.lato(
-  //                   fontSize: size.height * 0.028, // Reduced font size
-  //                   fontWeight: FontWeight.bold,
-  //                   color: color)),
-  //           SizedBox(height: size.height * 0.005),
-  //           Text(
-  //             title,
-  //             style: GoogleFonts.lato(
-  //                 fontSize: size.height * 0.014, // Reduced font size
-  //                 color: Colors.grey[600],
-  //                 fontWeight: FontWeight.w500),
-  //             textAlign: TextAlign.center,
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
   Widget _buildMainContent(Size size) {
     return Container(
       width: size.width,
@@ -780,161 +721,120 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Hot Jobs',
-              style: GoogleFonts.lato(
-                fontSize: size.height * 0.024,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue[800],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Hot Jobs',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.024,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[800],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return const JobsScreen();
+                    }));
+                  },
+                  child: Text(
+                    'View More',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.015,
+                      color: Colors.blue[600],
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: size.height * 0.01),
             if (availableJobs.isNotEmpty)
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: availableJobs.length > 3 ? 3 : availableJobs.length,
-                itemBuilder: (context, index) {
-                  final job = availableJobs[index];
-                  return Container(
-                    margin: EdgeInsets.only(bottom: size.height * 0.01),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blue.withOpacity(0.1),
-                          spreadRadius: 2,
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(size.width * 0.04),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(size.width * 0.03),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[800],
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.work,
-                              color: Colors.white,
-                              size: size.height * 0.03,
-                            ),
+              SizedBox(
+                height: size.height * 0.2,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: availableJobs.length,
+                  itemBuilder: (context, index) {
+                    final job = availableJobs[index];
+                    return Container(
+                      width: size.width * 0.7,
+                      margin: EdgeInsets.only(right: size.width * 0.04),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.1),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
                           ),
-                          SizedBox(width: size.width * 0.04),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        ],
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(size.width * 0.04),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              job.title,
+                              style: GoogleFonts.lato(
+                                fontSize: size.height * 0.019,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[800],
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: size.height * 0.01),
+                            Row(
                               children: [
+                                Icon(Icons.calendar_today,
+                                    size: size.height * 0.02,
+                                    color: Colors.blue[600]),
+                                SizedBox(width: size.width * 0.01),
                                 Text(
-                                  job.title,
+                                  'Deadline: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(job.deadline.toString()))}',
                                   style: GoogleFonts.lato(
-                                    fontSize: size.height * 0.019,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue[800],
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: size.height * 0.007),
-                                Row(
-                                  children: [
-                                    Icon(Icons.calendar_today,
-                                        size: size.height * 0.02,
-                                        color: Colors.blue[600]),
-                                    SizedBox(width: size.width * 0.01),
-                                    Text(
-                                      'Deadline: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(job.deadline.toString()))}',
-                                      style: GoogleFonts.lato(
-                                        fontSize: size.height * 0.016,
-                                        color: Colors.blue[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: size.height * 0.01),
-                                AnimatedCrossFade(
-                                  firstChild: Html(
-                                    data: job.description,
-                                    style: {
-                                      "body": Style(
-                                        fontSize: FontSize(
-                                          size.height * 0.018,
-                                        ),
-                                        maxLines: 2,
-                                        textOverflow: TextOverflow.ellipsis,
-                                        color: Colors.black,
-                                      ),
-                                    },
-                                  ),
-                                  secondChild: Html(
-                                    data: job.description,
-                                    style: {
-                                      "body": Style(
-                                        fontSize: FontSize(size.height * 0.018),
-                                        color: Colors.black,
-                                      ),
-                                    },
-                                  ),
-                                  crossFadeState: _isJobExpanded
-                                      ? CrossFadeState.showSecond
-                                      : CrossFadeState.showFirst,
-                                  duration: const Duration(milliseconds: 300),
-                                ),
-                                SizedBox(height: size.height * 0.0019),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _isJobExpanded = !_isJobExpanded;
-                                      });
-                                    },
-                                    child: Text(_isJobExpanded
-                                        ? 'See Less'
-                                        : 'See More'),
-                                  ),
-                                ),
-                                SizedBox(height: size.height * 0.0019),
-                                Padding(
-                                  padding: EdgeInsets.only(
-                                      left: size.height * 0.053),
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      // TODO: Implement attend functionality
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue[600],
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: size.height * 0.015),
-                                    ),
-                                    child: Text(
-                                      'Apply',
-                                      style: GoogleFonts.lato(
-                                        fontSize: size.height * 0.018,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                    fontSize: size.height * 0.016,
+                                    color: Colors.blue[600],
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                            const Spacer(),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(context,
+                                    MaterialPageRoute(builder: (context) {
+                                  return const JobsScreen();
+                                }));
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue[600],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                    vertical: size.height * 0.015),
+                              ),
+                              child: Text(
+                                'View Details',
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.018,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               )
             else
               Container(
@@ -967,84 +867,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Widget _buildUserSummary(Size size) {
-  //   return Container(
-  //     padding: EdgeInsets.all(size.width * 0.06),
-  //     margin: EdgeInsets.symmetric(horizontal: size.width * 0.06),
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(20),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.black.withOpacity(0.05),
-  //           blurRadius: 15,
-  //           offset: const Offset(0, 5),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Text('Activity Summary',
-  //             style: GoogleFonts.lato(
-  //                 fontSize: size.height * 0.026, fontWeight: FontWeight.bold)),
-  //         SizedBox(height: size.height * 0.03),
-  //         SizedBox(
-  //           height: size.height * 0.3,
-  //           child: PieChart(
-  //             PieChartData(
-  //               sectionsSpace: 2,
-  //               centerSpaceRadius: 50,
-  //               sections: [
-  //                 PieChartSectionData(
-  //                   value: totalCPDS.toDouble(),
-  //                   color: Colors.orange,
-  //                   title: 'CPDs',
-  //                   titleStyle: GoogleFonts.lato(
-  //                       color: Colors.white,
-  //                       fontWeight: FontWeight.bold,
-  //                       fontSize: size.height * 0.016),
-  //                   radius: 80,
-  //                 ),
-  //                 PieChartSectionData(
-  //                   value: totalEvents.toDouble(),
-  //                   color: Colors.purple,
-  //                   title: 'Events',
-  //                   titleStyle: GoogleFonts.lato(
-  //                       color: Colors.white,
-  //                       fontWeight: FontWeight.bold,
-  //                       fontSize: size.height * 0.016),
-  //                   radius: 80,
-  //                 ),
-  //                 PieChartSectionData(
-  //                   value: totalJobs.toDouble(),
-  //                   color: Colors.green,
-  //                   title: 'Jobs',
-  //                   titleStyle: GoogleFonts.lato(
-  //                       color: Colors.white,
-  //                       fontWeight: FontWeight.bold,
-  //                       fontSize: size.height * 0.016),
-  //                   radius: 80,
-  //                 ),
-  //                 PieChartSectionData(
-  //                   value: totalCommunications.toDouble(),
-  //                   color: Colors.blue,
-  //                   title: 'Communications',
-  //                   titleStyle: GoogleFonts.lato(
-  //                       color: Colors.white,
-  //                       fontWeight: FontWeight.bold,
-  //                       fontSize: size.height * 0.016),
-  //                   radius: 80,
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   Widget _buildUpcomingEvents(Size size) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
@@ -1053,13 +875,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Upcoming Events',
-              style: GoogleFonts.lato(
-                fontSize: size.height * 0.024,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue[800],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Upcoming Events',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.024,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[800],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const EventsScreen()));
+                  },
+                  child: Text(
+                    'View More',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.015,
+                      color: Colors.blue[600],
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: size.height * 0.01),
             if (upcomingEvents.isNotEmpty)
@@ -1087,7 +929,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Stack(
                       children: [
                         Padding(
-                          padding: EdgeInsets.all(size.width * 0.04),
+                          padding: EdgeInsets.all(size.width * 0.05),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

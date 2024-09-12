@@ -50,6 +50,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
         ),
         appBar: AppBar(
           // leading: Icon(Icons.menu),
+          iconTheme: const IconThemeData(color: Colors.white),
           backgroundColor: const Color.fromARGB(255, 42, 129, 201),
           actions: [
             Center(
@@ -60,7 +61,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
             )
           ],
           title: Text(
-            "Communication Page",
+            "Communications",
             style: TextStyle(fontSize: size.height * 0.02, color: Colors.white),
           ),
           elevation: 0,
@@ -95,10 +96,10 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.notifications,
                                   color: Colors.white,
-                                  size: 24,
+                                  size: size.height * 0.03,
                                 ),
                                 Center(
                                   child: Text(
@@ -140,10 +141,10 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.new_releases,
                                   color: Colors.white,
-                                  size: 24,
+                                  size: size.height * 0.03,
                                 ),
                                 Center(
                                   child: Text(
