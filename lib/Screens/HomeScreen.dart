@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 
 import 'package:fluttertoast/fluttertoast.dart';
@@ -11,9 +9,6 @@ import 'package:ippu/Widgets/HomeScreenWidgets/CalendarScreen.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/FirstDisplaySection.dart';
 import 'package:ippu/models/UserData.dart';
 import 'package:provider/provider.dart';
-//import http package
-import 'package:http/http.dart' as http;
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 

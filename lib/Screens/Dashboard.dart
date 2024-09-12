@@ -24,7 +24,7 @@ class _DashboardState extends State<Dashboard> {
       setState(() {});
     });
     _updateCountdowns();
-    _timer = Timer.periodic(Duration(seconds: 1), (_) => _updateCountdowns());
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCountdowns());
   }
 
   @override
@@ -143,7 +143,7 @@ class _DashboardState extends State<Dashboard> {
                         vertical: 8.0,
                         horizontal: 16.0,
                       ),
-                      child: Text(
+                      child: const Text(
                         'Hello [Name], Welcome to IPPU!',
                         style: TextStyle(
                           color: Colors.black87,
@@ -193,12 +193,12 @@ class _DashboardState extends State<Dashboard> {
             ),
             const SizedBox(height: 24),
             // Title "Upcoming Events"
-            AnimationConfiguration.staggeredList(
+            const AnimationConfiguration.staggeredList(
               position: 0,
-              duration: const Duration(milliseconds: 375),
+              duration: Duration(milliseconds: 375),
               child: ScaleAnimation(
                 child: FadeInAnimation(
-                  child: const Text(
+                  child: Text(
                     "Upcoming Events",
                     style: TextStyle(
                       fontSize: 28,
@@ -220,12 +220,12 @@ class _DashboardState extends State<Dashboard> {
             ),
             const SizedBox(height: 24),
             // Title "Upcoming CPDs"
-            AnimationConfiguration.staggeredList(
+            const AnimationConfiguration.staggeredList(
               position: 1,
-              duration: const Duration(milliseconds: 375),
+              duration: Duration(milliseconds: 375),
               child: ScaleAnimation(
                 child: FadeInAnimation(
-                  child: const Text(
+                  child: Text(
                     "Upcoming CPDs",
                     style: TextStyle(
                       fontSize: 28,
@@ -247,12 +247,12 @@ class _DashboardState extends State<Dashboard> {
             ),
             const SizedBox(height: 24),
             // Title "New Jobs"
-            AnimationConfiguration.staggeredList(
+            const AnimationConfiguration.staggeredList(
               position: 2,
-              duration: const Duration(milliseconds: 375),
+              duration: Duration(milliseconds: 375),
               child: ScaleAnimation(
                 child: FadeInAnimation(
-                  child: const Text(
+                  child: Text(
                     "New Jobs",
                     style: TextStyle(
                       fontSize: 28,
@@ -274,12 +274,12 @@ class _DashboardState extends State<Dashboard> {
             ),
             const SizedBox(height: 24),
             // Title "Unread Communications"
-            AnimationConfiguration.staggeredList(
+            const AnimationConfiguration.staggeredList(
               position: 3,
-              duration: const Duration(milliseconds: 375),
+              duration: Duration(milliseconds: 375),
               child: ScaleAnimation(
                 child: FadeInAnimation(
-                  child: const Text(
+                  child: Text(
                     "Unread Communications",
                     style: TextStyle(
                       fontSize: 28,
@@ -316,6 +316,9 @@ class _DashboardState extends State<Dashboard> {
         'venue': 'Venue B',
         'date': 'Sep 10, 2024',
       },
+
+
+      
       // Add more events as needed
     ];
   }
@@ -408,7 +411,7 @@ class ScrollableCardList extends StatelessWidget {
                         children: [
                           Text(
                             title,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
@@ -417,7 +420,7 @@ class ScrollableCardList extends StatelessWidget {
                           const SizedBox(height: 8),
                           Text(
                             item['venue'] as String,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
                               color: Colors.black54,
                             ),
@@ -425,7 +428,7 @@ class ScrollableCardList extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             item['date'] as String,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
                               color: Colors.black54,
                             ),
@@ -434,7 +437,7 @@ class ScrollableCardList extends StatelessWidget {
                           if (countdowns != null)
                             Text(
                               'Time remaining: ${_formatDuration(countdown!)}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.redAccent,
                               ),
