@@ -523,8 +523,8 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
                 Text(
                   DateTime.now()
                           .isBefore(DateTime.parse(job.deadline.toString()))
-                      ? 'Status: Applications Open'
-                      : 'Status: Applications Closed',
+                      ? 'Applications Open'
+                      : 'Applications Closed',
                   style: GoogleFonts.lato(
                     fontSize: size.height * 0.016,
                     color: DateTime.now()
