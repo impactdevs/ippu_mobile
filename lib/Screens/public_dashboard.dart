@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ippu/Widgets/AuthenticationWidgets/LoginScreen.dart';
 import 'package:ippu/controllers/auth_controller.dart';
@@ -246,12 +247,29 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
               color: Colors.blue[50],
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Text(
-              latestCommunication,
-              style: GoogleFonts.lato(
-                fontSize: size.height * 0.018,
-                color: Colors.blue[800],
-              ),
+            child: Column(
+              children: [
+                Html(
+                  data: latestCommunication,
+                  style: {
+                    "body": Style(
+                      fontSize: FontSize(size.height * 0.018),
+                      color: Colors.blue[800],
+                      fontFamily: GoogleFonts.lato().fontFamily,
+                      maxLines: 3,
+                      textOverflow: TextOverflow.ellipsis,
+                    ),
+                  },
+                ),
+                TextButton(
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginScreen())),
+                  child: Text('Read More',
+                      style: GoogleFonts.lato(color: Colors.blue[600])),
+                ),
+              ],
             ),
           ),
         ],
