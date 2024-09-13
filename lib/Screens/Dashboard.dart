@@ -18,6 +18,7 @@ import 'package:ippu/Widgets/CommunicationScreenWidgets/SingleCommunicationDispl
 // import 'package:fl_chart/fl_chart.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/CalendarScreen.dart';
+import 'package:ippu/Widgets/JobScreenWidgets/SIngleJobDetailDisplay.dart';
 import 'package:ippu/models/JobData.dart';
 import 'package:provider/provider.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
@@ -853,10 +854,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const Spacer(),
                             ElevatedButton(
                               onPressed: () {
-                                Navigator.push(context,
-                                    MaterialPageRoute(builder: (context) {
-                                  return const JobsScreen();
-                                }));
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        SingleJobDetailDisplayScreen(
+                                      title: job.title,
+                                      description: job.description,
+                                      deadline: job.deadline.toString(),
+                                    ),
+                                  ),
+                                );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue[600],
