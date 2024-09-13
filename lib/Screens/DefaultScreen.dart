@@ -171,7 +171,7 @@ class _DefaultScreenState extends State<DefaultScreen> {
                 BottomNavigationBarItem(
                     icon: Icon(Icons.workspace_premium), label: 'CPDs'),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.notifications), label: 'Events'),
+                    icon: Icon(Icons.event), label: 'Events'),
                 // BottomNavigationBarItem(
                 //     icon: Icon(Icons.person), label: 'Profile'),
               ],

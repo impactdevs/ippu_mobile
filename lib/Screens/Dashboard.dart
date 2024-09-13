@@ -1,8 +1,14 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:clean_dialog/clean_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutterwave_standard/core/flutterwave.dart';
+import 'package:flutterwave_standard/models/requests/customer.dart';
+import 'package:flutterwave_standard/models/requests/customizations.dart';
+import 'package:flutterwave_standard/models/responses/charge_response.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ippu/Screens/CpdsScreen.dart';
 import 'package:ippu/Screens/EventsScreen.dart';
@@ -19,6 +25,8 @@ import 'package:ippu/models/UserProvider.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
+import 'package:ippu/env.dart' as env;
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -763,7 +771,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SizedBox(height: size.height * 0.01),
             if (availableJobs.isNotEmpty)
               SizedBox(
-                height: size.height * 0.2,
+                height: size.height * 0.25,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: availableJobs.length,
@@ -815,6 +823,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                               ],
                             ),
+                            SizedBox(height: size.height * 0.01),
+                            Row(
+                              children: [
+                                Icon(Icons.access_time,
+                                    size: size.height * 0.02,
+                                    color: DateTime.now().isBefore(
+                                            DateTime.parse(
+                                                job.deadline.toString()))
+                                        ? Colors.green[600]
+                                        : Colors.red[600]),
+                                SizedBox(width: size.width * 0.01),
+                                Text(
+                                  DateTime.now().isBefore(DateTime.parse(
+                                          job.deadline.toString()))
+                                      ? 'Status: Applications Open'
+                                      : 'Status: Applications Closed',
+                                  style: GoogleFonts.lato(
+                                    fontSize: size.height * 0.014,
+                                    color: DateTime.now().isBefore(
+                                            DateTime.parse(
+                                                job.deadline.toString()))
+                                        ? Colors.green[600]
+                                        : Colors.red[600],
+                                  ),
+                                ),
+                              ],
+                            ),
                             const Spacer(),
                             ElevatedButton(
                               onPressed: () {
@@ -829,10 +864,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 padding: EdgeInsets.symmetric(
-                                    vertical: size.height * 0.015),
+                                    vertical: size.height * 0.015,
+                                    horizontal: size.width * 0.05),
                               ),
                               child: Text(
-                                'View Details',
+                                'Check Out',
                                 style: GoogleFonts.lato(
                                   fontSize: size.height * 0.018,
                                   fontWeight: FontWeight.bold,
@@ -1112,61 +1148,153 @@ class _DashboardScreenState extends State<DashboardScreen> {
             size,
             "Please complete your subscription",
             () {
-              // Add navigation to subscription page
+              final userData =
+                  Provider.of<UserProvider>(context, listen: false).user;
+              _handlePaymentInitialization(userData!.name, userData.email,
+                  userData.phone_no!, userData.membership_amount!);
             },
           ),
       ],
     );
   }
 
-  Widget _buildWarningCard(Size size, String message, VoidCallback onPressed) {
-    return Padding(
-        padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
-        child: Container(
-          margin: EdgeInsets.symmetric(vertical: size.height * 0.01),
-          padding: EdgeInsets.all(size.width * 0.03),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFF7676),
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  message,
-                  style: GoogleFonts.lato(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: size.height * 0.018,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: onPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: Text(
-                  'Complete',
-                  style: GoogleFonts.lato(
-                    color: const Color(0xFFFF7676),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ));
+  _handlePaymentInitialization(String fullName, String email,
+      String phoneNumber, String membershipAmount) async {
+    final Customer customer = Customer(
+      name: fullName,
+      phoneNumber: phoneNumber,
+      email: email,
+    );
+
+    final Flutterwave flutterwave = Flutterwave(
+        context: context,
+        publicKey: env.Env.FLW_PUBLIC_KEY,
+        currency: "UGX",
+        redirectUrl: 'https://staging.ippu.org/login',
+        txRef: Uuid().v1(),
+        amount: membershipAmount,
+        customer: customer,
+        paymentOptions: "card, payattitude, barter, bank transfer, ussd",
+        customization: Customization(
+            title: "IPPU PAYMENT",
+            logo:
+                "https://ippu.or.ug/wp-content/uploads/2020/03/cropped-Logo-192x192.png"),
+        isTestMode: false);
+    final ChargeResponse response = await flutterwave.charge();
+    String message;
+    if (response.success == true) {
+      message = "Payment successful,\n thank you!";
+      sendRequest();
+    } else {
+      message = "Payment failed,\n try again later";
+    }
+    showLoading(message);
   }
+
+  Future<void> showLoading(String message) {
+    return showDialog(
+      context: context,
+      builder: (context) => CleanDialog(
+        title: 'success',
+        content: message,
+        backgroundColor: Colors.blue,
+        titleTextStyle: const TextStyle(
+            fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white),
+        contentTextStyle: const TextStyle(fontSize: 16, color: Colors.white),
+        actions: [
+          CleanDialogActionButtons(
+            actionTitle: 'OK',
+            onPressed: () => Navigator.pop(context),
+          )
+        ],
+      ),
+    );
+  }
+
+  void showBottomNotification(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.TOP,
+      backgroundColor: Colors.black,
+      textColor: Colors.white,
+    );
+  }
+
+  Future<void> sendRequest() async {
+    AuthController authController = AuthController();
+
+    //try catch
+    try {
+      final response = await authController.subscribe();
+      //check if response contains message key
+      if (response.containsKey("message")) {
+        //notify the SubscriptionStatusProvider
+        if (mounted) {
+          context
+              .read<SubscriptionStatusProvider>()
+              .setSubscriptionStatus("Pending");
+        }
+        //show bottom notification
+        showBottomNotification(
+            "your request has been sent! You will be approved");
+      } else {
+        //show bottom notification
+        showBottomNotification("Something went wrong");
+      }
+    } catch (e) {
+      showBottomNotification("Something went wrong");
+    }
+  }
+}
+
+Widget _buildWarningCard(Size size, String message, VoidCallback onPressed) {
+  return Padding(
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: size.height * 0.01),
+        padding: EdgeInsets.all(size.width * 0.03),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF7676),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.lato(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: size.height * 0.018,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                'Complete',
+                style: GoogleFonts.lato(
+                  color: const Color(0xFFFF7676),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ));
 }
