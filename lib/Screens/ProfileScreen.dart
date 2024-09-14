@@ -42,12 +42,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         child: const DrawerWidget(),
       ),
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context, true);
-          },
-        ),
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Profile',

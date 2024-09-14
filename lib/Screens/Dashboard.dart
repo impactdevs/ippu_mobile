@@ -1158,8 +1158,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
             () {
               final userData =
                   Provider.of<UserProvider>(context, listen: false).user;
-              _handlePaymentInitialization(userData!.name, userData.email,
-                  userData.phone_no!, userData.membership_amount!);
+              if (userData!.membership_amount == '0') {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Subscription Not Available'),
+                      content: const Text(
+                          'Guests cannot subscribe. Please change your Account Type from Guest to another type in order to subscribe.'),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('Change Account Type'),
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ProfileScreen()));
+                          },
+                        ),
+                        TextButton(
+                          child: const Text('OK'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              } else {
+                _handlePaymentInitialization(userData.name, userData.email,
+                    userData.phone_no!, userData.membership_amount!);
+              }
             },
           ),
       ],
@@ -1179,7 +1210,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
         redirectUrl: 'https://staging.ippu.org/login',
-        txRef: Uuid().v1(),
+        txRef: const Uuid().v1(),
         amount: membershipAmount,
         customer: customer,
         paymentOptions: "card, payattitude, barter, bank transfer, ussd",
