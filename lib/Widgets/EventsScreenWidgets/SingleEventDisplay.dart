@@ -5,6 +5,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutterwave_standard/flutterwave.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/UserData.dart';
 import 'package:ippu/models/UserProvider.dart';
@@ -107,7 +108,12 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
     final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
+      drawer: Drawer(
+        width: size.width * 0.8,
+        child: const DrawerWidget(),
+      ),
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           widget.eventName,
           style: GoogleFonts.lato(
@@ -121,6 +127,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
           future: loadProfile(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
+              var profile = snapshot.data;
               return SingleChildScrollView(
                 scrollDirection: Axis.vertical,
                 child: Padding(
@@ -165,7 +172,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
                               ),
                             ),
                           ),
-                          Spacer(),
+                          const Spacer(),
                           IconButton(
                             icon: const Icon(
                               Icons.share,
@@ -284,9 +291,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
                                   ),
                                 ),
                                 onPressed: () {
-                                  // _handlePaymentInitialization(profileData.name,
-                                  //     profileData.email, profileData.phone_no!);
-                                  sendAttendanceRequest(widget.id);
+                                  _showPaymentDialog(size, profile);
                                 },
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(
@@ -384,6 +389,75 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
     );
   }
 
+  final TextEditingController _amountController = TextEditingController();
+
+  // Function to show the payment mode dialog
+  void _showPaymentDialog(Size size, profile) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Payment Mode'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Cash'),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Proceed with booking since it's cash
+                  sendAttendanceRequest(widget.id);
+                },
+              ),
+              ListTile(
+                title: const Text('Cashless'),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Show a dialog to enter the amount for cashless payment
+                  _showCashlessPaymentDialog(size, profile);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Function to show the dialog for cashless payment
+  void _showCashlessPaymentDialog(Size size, profile) {
+    _amountController.text =
+        widget.normal_rate.toString(); // Set default to event fee
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Enter Amount to Pay'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _amountController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Amount'),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                // Trigger the Flutterwave payment process
+                _handlePaymentInitialization(
+                    profile.name, profile.email, profile.phone_no.toString());
+              },
+              child: const Text('Pay'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   String extractDate(String fullDate) {
     List<String> parts = fullDate.split('T');
     return parts[0];
@@ -455,7 +529,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
         redirectUrl: 'https://staging.ippu.org/login',
-        txRef: Uuid().v1(),
+        txRef: const Uuid().v1(),
         amount: isMember() ? widget.member_rate : widget.normal_rate,
         customer: customer,
         paymentOptions: "card, payattitude, barter, bank transfer, ussd",
@@ -586,7 +660,7 @@ class EventInfoColumn extends StatelessWidget {
         ),
         Text(
           value,
-          style: TextStyle(fontSize: 14),
+          style: const TextStyle(fontSize: 14),
         ),
       ],
     );

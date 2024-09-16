@@ -17,6 +17,7 @@ import 'package:ippu/Screens/ProfileScreen.dart';
 import 'package:ippu/Widgets/CommunicationScreenWidgets/SingleCommunicationDisplayScreen.dart';
 // import 'package:fl_chart/fl_chart.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
+import 'package:ippu/Widgets/EventsScreenWidgets/SingleEventDisplay.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/CalendarScreen.dart';
 import 'package:ippu/Widgets/JobScreenWidgets/SIngleJobDetailDisplay.dart';
 import 'package:ippu/models/JobData.dart';
@@ -411,7 +412,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          // TODO: Implement attend functionality
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) {
+                              return SingleEventDisplay(
+                                id: latestItem['id'].toString(),
+                                attendance_request:
+                                    latestItem['attendance_request'],
+                                points: latestItem['points'].toString(),
+                                normal_rate: latestItem['rate'],
+                                description: latestItem['details'],
+                                startDate: latestItem['start_date'],
+                                endDate: latestItem['end_date'],
+                                member_rate: latestItem['member_rate'],
+                                imagelink:
+                                    'https://staging.ippu.org/storage/banners/${latestItem['banner_name']}',
+                                eventName: latestItem['name'],
+                              );
+                            }),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue[600],
