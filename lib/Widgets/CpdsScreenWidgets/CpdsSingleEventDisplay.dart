@@ -460,10 +460,9 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
             children: [
               ListTile(
                 title: const Text('Cash'),
-                onTap: () {
-                  Navigator.pop(context, true);
-                  // Proceed with booking since it's cash
+                onTap: () async {
                   sendAttendanceRequest(widget.cpdId);
+                  Navigator.pop(context, true);
                 },
               ),
               ListTile(

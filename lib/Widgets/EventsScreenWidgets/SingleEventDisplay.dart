@@ -404,10 +404,9 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
             children: [
               ListTile(
                 title: const Text('Cash'),
-                onTap: () {
-                  Navigator.pop(context, true);
-                  // Proceed with booking since it's cash
+                onTap: () async {
                   sendAttendanceRequest(widget.id);
+                  Navigator.pop(context, true);
                 },
               ),
               ListTile(

@@ -451,7 +451,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             } else {
                               return ElevatedButton(
                                 onPressed: () async {
-                                  final result = isEvent
+                                  isEvent
                                       ? await Navigator.push(
                                           context,
                                           MaterialPageRoute(builder: (context) {
@@ -474,7 +474,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                               eventName: latestItem['name'],
                                             );
                                           }),
-                                        )
+                                        ).then((value) {
+                                          setState(() {
+                                            fetchAllData();
+                                          });
+                                        })
                                       : await Navigator.push(
                                           context,
                                           MaterialPageRoute(builder: (context) {
@@ -504,13 +508,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                               location: latestItem['location'],
                                             );
                                           }),
-                                        );
-
-                                  if (result == true) {
-                                    setState(() {
-                                      fetchAllData();
-                                    });
-                                  }
+                                        ).then((value) {
+                                          setState(() {
+                                            fetchAllData();
+                                          });
+                                        });
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue[600],
