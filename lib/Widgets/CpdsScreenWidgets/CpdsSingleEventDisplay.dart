@@ -118,6 +118,13 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
     final size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+        ),
         title: Text(
           widget.cpdsname,
           style: GoogleFonts.lato(
@@ -335,8 +342,9 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
                                   padding: EdgeInsets.all(size.height * 0.024),
                                 ),
                                 onPressed: () {
-                                  _handlePaymentInitialization(profileData.name,
-                                      profileData.email, profileData.phone_no!);
+                                  // _handlePaymentInitialization(profileData.name,
+                                  //     profileData.email, profileData.phone_no!);
+                                  _showPaymentDialog(size, profileData);
                                 },
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(
@@ -435,6 +443,75 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
               return const Center(child: CircularProgressIndicator());
             }
           }),
+    );
+  }
+
+  final TextEditingController _amountController = TextEditingController();
+
+  // Function to show the payment mode dialog
+  void _showPaymentDialog(Size size, profile) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Payment Mode'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Cash'),
+                onTap: () {
+                  Navigator.pop(context, true);
+                  // Proceed with booking since it's cash
+                  sendAttendanceRequest(widget.cpdId);
+                },
+              ),
+              ListTile(
+                title: const Text('Cashless'),
+                onTap: () {
+                  Navigator.pop(context, true);
+                  // Show a dialog to enter the amount for cashless payment
+                  _showCashlessPaymentDialog(size, profile);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Function to show the dialog for cashless payment
+  void _showCashlessPaymentDialog(Size size, profile) {
+    _amountController.text =
+        widget.normal_rate.toString(); // Set default to event fee
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Enter Amount to Pay'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _amountController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Amount'),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                // Trigger the Flutterwave payment process
+                _handlePaymentInitialization(
+                    profile.name, profile.email, profile.phone_no.toString());
+              },
+              child: const Text('Pay'),
+            ),
+          ],
+        );
+      },
     );
   }
 

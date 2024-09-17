@@ -219,10 +219,10 @@ class _ContainerDisplayingCpdsState extends State<ContainerDisplayingCpds>
                                 .toLowerCase()
                                 .contains(_searchQuery.toLowerCase())) {
                           return InkWell(
-                            onTap: () {
+                            onTap: () async {
                               print(
                                   'attendance status: ${item.attendance_request}');
-                              Navigator.push(
+                              final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) {
                                   return CpdsSingleEventDisplay(
@@ -244,6 +244,12 @@ class _ContainerDisplayingCpdsState extends State<ContainerDisplayingCpds>
                                   );
                                 }),
                               );
+
+                              if (result == true) {
+                                setState(() {
+                                  cpdDataFuture = fetchAllCpds();
+                                });
+                              }
                             },
                             child: Column(
                               children: [

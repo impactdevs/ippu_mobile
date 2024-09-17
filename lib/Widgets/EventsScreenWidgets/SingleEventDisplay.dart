@@ -5,7 +5,6 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutterwave_standard/flutterwave.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/UserData.dart';
 import 'package:ippu/models/UserProvider.dart';
@@ -108,10 +107,6 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
     final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
-      drawer: Drawer(
-        width: size.width * 0.8,
-        child: const DrawerWidget(),
-      ),
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
@@ -119,6 +114,12 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
           style: GoogleFonts.lato(
             textStyle: const TextStyle(color: Colors.white),
           ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
         ),
         backgroundColor: const Color(0xFF2A81C9),
         elevation: 0,
@@ -404,7 +405,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
               ListTile(
                 title: const Text('Cash'),
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(context, true);
                   // Proceed with booking since it's cash
                   sendAttendanceRequest(widget.id);
                 },
@@ -412,7 +413,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
               ListTile(
                 title: const Text('Cashless'),
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(context, true);
                   // Show a dialog to enter the amount for cashless payment
                   _showCashlessPaymentDialog(size, profile);
                 },

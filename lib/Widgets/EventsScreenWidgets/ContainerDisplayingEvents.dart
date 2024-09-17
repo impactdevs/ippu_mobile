@@ -203,8 +203,8 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                                 .toLowerCase()
                                 .contains(_searchQuery.toLowerCase())) {
                           return InkWell(
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) {
                                   return SingleEventDisplay(
@@ -222,6 +222,12 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                                   );
                                 }),
                               );
+
+                              if (result == true) {
+                                setState(() {
+                                  eventDataFuture = fetchAllEvents();
+                                });
+                              }
                             },
                             child: Column(
                               children: [

@@ -15,6 +15,7 @@ import 'package:ippu/Screens/EventsScreen.dart';
 import 'package:ippu/Screens/JobsScreen.dart';
 import 'package:ippu/Screens/ProfileScreen.dart';
 import 'package:ippu/Widgets/CommunicationScreenWidgets/SingleCommunicationDisplayScreen.dart';
+import 'package:ippu/Widgets/CpdsScreenWidgets/CpdsSingleEventDisplay.dart';
 // import 'package:fl_chart/fl_chart.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
 import 'package:ippu/Widgets/EventsScreenWidgets/SingleEventDisplay.dart';
@@ -279,31 +280,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildLatestEventCPD(Size size) {
-    final latestItem = upcomingEvents.isNotEmpty
-        ? upcomingEvents.first
-        : (upcomingCPDs.isNotEmpty ? upcomingCPDs.first : null);
-    if (latestItem == null) return const SizedBox.shrink();
+    final latestEvent = upcomingEvents.isNotEmpty ? upcomingEvents.first : null;
+    final latestCPD = upcomingCPDs.isNotEmpty ? upcomingCPDs.first : null;
+
+    if (latestEvent == null && latestCPD == null) {
+      return const SizedBox.shrink();
+    }
+
+    final latestItem = (latestEvent != null && latestCPD != null)
+        ? (DateTime.parse(latestEvent['start_date'])
+                .isBefore(DateTime.parse(latestCPD['start_date']))
+            ? latestEvent
+            : latestCPD)
+        : (latestEvent ?? latestCPD);
 
     final eventDate = DateTime.parse(latestItem['start_date']);
-    final isEvent = upcomingEvents.isNotEmpty;
+    final isEvent = latestItem == latestEvent;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withOpacity(0.1),
-            spreadRadius: 2,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.1),
+              spreadRadius: 2,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Container(
             padding: EdgeInsets.all(size.width * 0.04),
             decoration: BoxDecoration(
@@ -410,44 +418,142 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) {
-                              return SingleEventDisplay(
-                                id: latestItem['id'].toString(),
-                                attendance_request:
-                                    latestItem['attendance_request'],
-                                points: latestItem['points'].toString(),
-                                normal_rate: latestItem['rate'],
-                                description: latestItem['details'],
-                                startDate: latestItem['start_date'],
-                                endDate: latestItem['end_date'],
-                                member_rate: latestItem['member_rate'],
-                                imagelink:
-                                    'https://staging.ippu.org/storage/banners/${latestItem['banner_name']}',
-                                eventName: latestItem['name'],
+                      child: Builder(
+                        builder: (context) {
+                          DateTime currentDate = DateTime.now();
+                          DateTime startDate =
+                              DateTime.parse(latestItem['start_date']);
+                          DateTime endDate =
+                              DateTime.parse(latestItem['end_date']);
+                          bool attendanceRequest =
+                              latestItem['attendance_request'];
+
+                          if (currentDate.isBefore(endDate)) {
+                            if (currentDate.isAfter(startDate) ||
+                                currentDate.isAtSameMomentAs(startDate)) {
+                              return Text(
+                                "Event is happening",
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.018,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[600],
+                                ),
                               );
-                            }),
-                          );
+                            } else if (attendanceRequest) {
+                              return Text(
+                                "Thank you for booking the event",
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.018,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[600],
+                                ),
+                              );
+                            } else {
+                              return ElevatedButton(
+                                onPressed: () async {
+                                  final result = isEvent
+                                      ? await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) {
+                                            return SingleEventDisplay(
+                                              id: latestItem['id'].toString(),
+                                              attendance_request: latestItem[
+                                                  'attendance_request'],
+                                              points: latestItem['points']
+                                                  .toString(),
+                                              normal_rate: latestItem['rate'],
+                                              description:
+                                                  latestItem['details'],
+                                              startDate:
+                                                  latestItem['start_date'],
+                                              endDate: latestItem['end_date'],
+                                              member_rate:
+                                                  latestItem['member_rate'],
+                                              imagelink:
+                                                  'https://staging.ippu.org/storage/banners/${latestItem['banner_name']}',
+                                              eventName: latestItem['name'],
+                                            );
+                                          }),
+                                        )
+                                      : await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) {
+                                            return CpdsSingleEventDisplay(
+                                              attendance_request: latestItem[
+                                                  'attendance_request'],
+                                              content: latestItem['content'],
+                                              target_group:
+                                                  latestItem['target_group'],
+                                              startDate:
+                                                  latestItem['start_date'],
+                                              endDate: latestItem['end_date'],
+                                              rate: latestItem['location']
+                                                  .toString(),
+                                              type: latestItem['type'],
+                                              cpdId:
+                                                  latestItem['id'].toString(),
+                                              attendees: latestItem['points']
+                                                  .toString(),
+                                              imagelink:
+                                                  'https://staging.ippu.org/storage/banners/${latestItem['banner']}',
+                                              cpdsname: latestItem['topic'],
+                                              normal_rate:
+                                                  latestItem['normal_rate'],
+                                              member_rate:
+                                                  latestItem['members_rate'],
+                                              location: latestItem['location'],
+                                            );
+                                          }),
+                                        );
+
+                                  if (result == true) {
+                                    setState(() {
+                                      fetchAllData();
+                                    });
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue[600],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: size.height * 0.015),
+                                ),
+                                child: Text(
+                                  isEvent
+                                      ? 'Book for Attendance'
+                                      : 'Book for CPD',
+                                  style: GoogleFonts.lato(
+                                    fontSize: size.height * 0.018,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              );
+                            }
+                          } else {
+                            if (attendanceRequest) {
+                              return Text(
+                                "Thank you for attending this event",
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.018,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[600],
+                                ),
+                              );
+                            } else {
+                              return Text(
+                                "This event happened, you missed!",
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.018,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[600],
+                                ),
+                              );
+                            }
+                          }
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[600],
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                              vertical: size.height * 0.015),
-                        ),
-                        child: Text(
-                          'Book for Attendance',
-                          style: GoogleFonts.lato(
-                            fontSize: size.height * 0.018,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
                       ),
                     ),
                   ],
@@ -455,9 +561,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-        ],
-      ),
-    );
+        ]));
   }
 
   String extractDate(String fullDate) {
