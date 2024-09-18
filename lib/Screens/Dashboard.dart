@@ -315,7 +315,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Container(
             padding: EdgeInsets.all(size.width * 0.04),
             decoration: BoxDecoration(
-              color: isEvent ? Colors.blue[600] : Colors.orange[600],
+              color: Colors.blue[600],
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
@@ -436,7 +436,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 style: GoogleFonts.lato(
                                   fontSize: size.height * 0.018,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blue[600],
+                                  color: Colors.green[600],
                                 ),
                               );
                             } else if (attendanceRequest) {
@@ -445,7 +445,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 style: GoogleFonts.lato(
                                   fontSize: size.height * 0.018,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blue[600],
+                                  color: Colors.green[600],
                                 ),
                               );
                             } else {

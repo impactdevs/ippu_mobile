@@ -233,6 +233,7 @@ class _ContainerDisplayingCpdsState extends State<ContainerDisplayingCpds>
                               });
                             },
                             child: Card(
+                              color: Colors.white,
                               margin: EdgeInsets.symmetric(
                                 vertical: size.height * 0.01,
                                 horizontal: size.width * 0.05,
@@ -264,7 +265,7 @@ class _ContainerDisplayingCpdsState extends State<ContainerDisplayingCpds>
                                         Text(
                                           activityName,
                                           style: GoogleFonts.lato(
-                                            fontSize: size.height * 0.02,
+                                            fontSize: size.height * 0.018,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.black87,
                                           ),
