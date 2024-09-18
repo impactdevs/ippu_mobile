@@ -16,11 +16,10 @@ import 'package:ippu/Screens/JobsScreen.dart';
 import 'package:ippu/Screens/ProfileScreen.dart';
 import 'package:ippu/Widgets/CommunicationScreenWidgets/SingleCommunicationDisplayScreen.dart';
 import 'package:ippu/Widgets/CpdsScreenWidgets/CpdsSingleEventDisplay.dart';
-// import 'package:fl_chart/fl_chart.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
 import 'package:ippu/Widgets/EventsScreenWidgets/SingleEventDisplay.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/CalendarScreen.dart';
-import 'package:ippu/Widgets/JobScreenWidgets/SIngleJobDetailDisplay.dart';
+import 'package:ippu/Widgets/JobScreenWidgets/SingleJobDetailDisplay.dart';
 import 'package:ippu/models/JobData.dart';
 import 'package:provider/provider.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
@@ -32,10 +31,10 @@ import 'package:uuid/uuid.dart';
 import 'package:ippu/env.dart' as env;
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  const DashboardScreen({Key? key}) : super(key: key);
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  _DashboardScreenState createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
@@ -49,20 +48,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String latestCommunication = '';
   bool isLoading = true;
   final formatter = NumberFormat('#,##0');
-  var latestComm = {};
+  Map<String, dynamic> latestComm = {};
 
   @override
   void initState() {
     super.initState();
+    _loadInitialData();
+  }
+
+  void _loadInitialData() {
     fetchAllData();
   }
 
   Future<List<JobData>> fetchJobData() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    // Define the URL with  userData.id
     const apiUrl = 'https://staging.ippu.org/api/jobs';
 
-    // Define the headers with the bearer token
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
     };
@@ -72,82 +73,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonData = jsonDecode(response.body);
         final List<dynamic> availableJobs = jsonData['data'];
-        log(availableJobs.toString());
-        List<JobData> jobs = availableJobs.map((item) {
-          return JobData(
-            id: item['id'],
-            title: item['title'],
-            description: item['description'],
-            visibleFrom: item['visibleFrom'],
-            visibleTo: item['visibleTo'],
-            deadline: item['deadline'],
-          );
-        }).toList();
-        return jobs;
+
+        return availableJobs.map((item) => JobData.fromJson(item)).toList();
       } else {
         throw Exception('Failed to load events data');
       }
     } catch (error) {
-      //catch the exception
-      return []; // Return an empty list or handle the error in your UI
+      log('Error fetching job data: $error');
+      return [];
     }
   }
 
   Future<void> fetchAllData() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
     int userId = userData!.id;
+
     try {
-      AuthController authController = AuthController();
-      final cpds = await authController.getCpds(userId);
-      final events = await authController.getEvents(userId);
-      final communications = await authController.getAllCommunications(userId);
-      log(communications.toString());
-      final jobs = await fetchJobData();
+      final authController = AuthController();
+      final futures = await Future.wait([
+        authController.getCpds(userId),
+        authController.getEvents(userId),
+        authController.getAllCommunications(userId),
+        fetchJobData(),
+      ]);
 
-      setState(() {
-        totalEvents = events.length;
-        totalCPDS = cpds.length;
-        availableJobs = jobs;
-        totalJobs = jobs.length;
-        totalCommunications = communications.length;
-        final now = DateTime.now();
-        upcomingEvents = events
-            .where((event) =>
-                DateTime.parse(event['start_date']).isAfter(DateTime.now()))
-            .toList()
-          ..sort((a, b) {
-            DateTime dateA = DateTime.parse(a['start_date']);
-            DateTime dateB = DateTime.parse(b['start_date']);
-            return dateA.difference(now).compareTo(dateB.difference(now));
-          });
-        log(upcomingEvents.toString());
+      final cpds = futures[0];
+      final events = futures[1];
+      final communications = futures[2];
+      final jobs = futures[3] as List<JobData>;
 
-        upcomingCPDs = cpds
-            .where((cpd) => DateTime.parse(cpd['start_date']).isAfter(now))
-            .toList()
-          ..sort((a, b) {
-            DateTime dateA = DateTime.parse(a['start_date']);
-            DateTime dateB = DateTime.parse(b['start_date']);
-            return dateA.difference(now).compareTo(dateB.difference(now));
-          });
-        log(upcomingCPDs.toString());
-        latestComm = communications.isNotEmpty
-            ? communications.first
-            : {'message': 'No recent communications'};
-        latestCommunication = communications.isNotEmpty
-            ? communications.first['message']
-            : 'No recent communications';
+      if (mounted) {
+        setState(() {
+          totalEvents = events.length;
+          totalCPDS = cpds.length;
+          availableJobs = jobs;
+          totalJobs = jobs.length;
+          totalCommunications = communications.length;
 
-        Provider.of<UserProvider>(context, listen: false)
-            .totalNumberOfCPDS(totalCPDS);
-        Provider.of<UserProvider>(context, listen: false)
-            .totalNumberOfEvents(totalEvents);
-        Provider.of<UserProvider>(context, listen: false)
-            .totalNumberOfCommunications(totalCommunications);
-        isLoading = false;
-      });
+          final now = DateTime.now();
+          upcomingEvents = events
+              .where(
+                  (event) => DateTime.parse(event['start_date']).isAfter(now))
+              .toList()
+            ..sort((a, b) => DateTime.parse(a['start_date'])
+                .compareTo(DateTime.parse(b['start_date'])));
+
+          upcomingCPDs = cpds
+              .where((cpd) => DateTime.parse(cpd['start_date']).isAfter(now))
+              .toList()
+            ..sort((a, b) => DateTime.parse(a['start_date'])
+                .compareTo(DateTime.parse(b['start_date'])));
+
+          latestComm = communications.isNotEmpty
+              ? communications.first
+              : {'message': 'No recent communications'};
+          latestCommunication = communications.isNotEmpty
+              ? communications.first['message']
+              : 'No recent communications';
+
+          Provider.of<UserProvider>(context, listen: false)
+              .totalNumberOfCPDS(totalCPDS);
+          Provider.of<UserProvider>(context, listen: false)
+              .totalNumberOfEvents(totalEvents);
+          Provider.of<UserProvider>(context, listen: false)
+              .totalNumberOfCommunications(totalCommunications);
+          isLoading = false;
+        });
+      }
     } catch (e) {
       log('Error fetching data: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -164,44 +163,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: const DrawerWidget(),
       ),
       appBar: AppBar(
-          iconTheme: const IconThemeData(color: Colors.white),
-          title: Text(
-            'IPPU MEMBERSHIP APP',
-            style: GoogleFonts.lato(
-              fontSize: size.height * 0.020,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          'IPPU MEMBERSHIP APP',
+          style: GoogleFonts.lato(
+            fontSize: size.height * 0.020,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2A81C9), Color(0xFF1E5F94)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-          centerTitle: true,
-          flexibleSpace: Stack(
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF2A81C9), Color(0xFF1E5F94)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-              ),
-            ],
+        ),
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const CalendarScreen())),
+            icon: const Icon(Icons.calendar_month),
           ),
-          actions: [
-            IconButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const CalendarScreen()));
-              },
-              icon: const Icon(Icons.calendar_month),
-            ),
-          ]),
+        ],
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
+          : RefreshIndicator(
+              onRefresh: fetchAllData,
+              child: Stack(children: [
                 Container(
                   height: size.height * 0.5,
                   decoration: const BoxDecoration(
@@ -227,11 +222,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-                // if (subscriptionStatus == 'false')
-                //   _buildSubscriptionNotification(size),
-                // if (profileStatus != null && profileStatus)
-                //   _buildProfileNotification(size),
-              ],
+              ]
+                  // if (subscriptionStatus == 'false')
+                  //   _buildSubscriptionNotification(size),
+                  // if (profileStatus != null && profileStatus)
+                  //   _buildProfileNotification(size),
+                  ),
             ),
     );
   }
@@ -1462,3 +1458,6 @@ Widget _buildWarningCard(Size size, String message, VoidCallback onPressed) {
         ),
       ));
 }
+
+  // ... Rest of the code remains the same
+
