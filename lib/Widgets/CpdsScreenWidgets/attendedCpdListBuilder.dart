@@ -1,6 +1,7 @@
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:ippu/Widgets/CpdsScreenWidgets/AttendedSingleCpdDisplay.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/AttendedCpdModel.dart';
@@ -83,8 +84,10 @@ class _attendedCpdListBuilderState extends State<attendedCpdListBuilder> {
               return Column(
                 children: [
                   Container(
-                    height: size.height * 0.46,
-                    width: size.width * 0.84,
+                    margin: EdgeInsets.symmetric(
+                      vertical: size.height * 0.01,
+                      horizontal: size.width * 0.05,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       boxShadow: [
@@ -95,131 +98,129 @@ class _attendedCpdListBuilderState extends State<attendedCpdListBuilder> {
                           spreadRadius: 0.2,
                         ),
                       ],
-                      borderRadius: BorderRadius.circular(5),
+                      borderRadius: BorderRadius.circular(15),
                       border: Border.all(color: Colors.grey.withOpacity(0.5)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Center(
-                          child: Container(
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(15),
+                          ),
+                          child: Image.network(
+                            "https://staging.ippu.org/storage/banners/${data.banner}",
                             height: size.height * 0.22,
-                            width: size.width * 0.56,
-                            decoration: BoxDecoration(
-                              // border: Border.all(
-                              //   color: Colors.lightBlue,
-                              // ),
-                              image: DecorationImage(
-                                  image: NetworkImage(
-                                      "https://staging.ippu.org/storage/banners/${data.banner}")),
-                            ),
+                            width: double.infinity,
+                            fit: BoxFit.cover,
                           ),
                         ),
-                        const Divider(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.only(
-                                      left: size.width * 0.06,
-                                      top: size.height * 0.004),
-                                  child: Text(
-                                    "Event name",
-                                    style: GoogleFonts.lato(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: size.height * 0.04,
-                                    ),
-                                  ),
+                        Padding(
+                          padding: EdgeInsets.all(size.height * 0.02),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                data.topic,
+                                style: GoogleFonts.lato(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: size.height * 0.018,
+                                  color: Colors.black87,
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.only(
-                                      left: size.width * 0.06,
-                                      top: size.height * 0.0008),
-                                  child: Text(
-                                    data.topic.split(' ').take(3).join(' '),
-                                    style: const TextStyle(color: Colors.blue),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding:
-                                  EdgeInsets.only(right: size.width * 0.07),
-                              child: Column(
+                              ),
+                              SizedBox(height: size.height * 0.01),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(
-                                        left: size.width * 0.06,
-                                        top: size.height * 0.016),
-                                    child: const Text(
-                                      "Points",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                      textAlign: TextAlign.justify,
-                                    ),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Start Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(data.startDate))}",
+                                        style: GoogleFonts.lato(
+                                          fontSize: size.height * 0.017,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      Text(
+                                        "End Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(data.endDate))}",
+                                        style: GoogleFonts.lato(
+                                          fontSize: size.height * 0.017,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  Padding(
-                                    padding: EdgeInsets.only(
-                                        left: size.width * 0.06,
-                                        right: size.width * 0.06,
-                                        top: size.height * 0.0016),
-                                    child: Text(
-                                      data.points,
-                                      textAlign: TextAlign.justify,
-                                      style:
-                                          const TextStyle(color: Colors.blue),
-                                    ),
+                                  Column(
+                                    children: [
+                                      Text(
+                                        "Points",
+                                        style: GoogleFonts.lato(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: size.height * 0.018,
+                                        ),
+                                      ),
+                                      Text(
+                                        data.points,
+                                        style: GoogleFonts.lato(
+                                          fontSize: size.height * 0.018,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: size.height * 0.024,
-                        ),
-                        Center(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromARGB(255, 42,
-                                  129, 201), // Change button color to green
-                              padding: EdgeInsets.all(size.height * 0.024),
-                            ),
-                            onPressed: () {
-                              Navigator.push(context,
-                                  MaterialPageRoute(builder: (context) {
-                                return AttendedSingleCpdDisplay(
-                                  eventId: data.id,
-                                  content: data.content,
-                                  target_group: data.targetGroup,
-                                  startDate: data.startDate,
-                                  endDate: data.endDate,
-                                  type: data.type,
-                                  location: data.location,
-                                  imagelink:
-                                      'https://staging.ippu.org/storage/banners/${data.banner}',
-                                  cpdsname: data.topic,
-                                  status: data.attendance_status,
-                                );
-                              }));
-                            },
-                            child: Text(
-                              'Click to view more information',
-                              style: TextStyle(
-                                fontSize: size.height * 0.02,
-                                color: Colors.white,
+                              SizedBox(height: size.height * 0.02),
+                              Center(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue[800],
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: size.height * 0.014,
+                                      horizontal: size.width * 0.1,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.push(context,
+                                        MaterialPageRoute(builder: (context) {
+                                      return AttendedSingleCpdDisplay(
+                                        eventId: data.id,
+                                        content: data.content,
+                                        target_group: data.targetGroup,
+                                        startDate: data.startDate,
+                                        endDate: data.endDate,
+                                        type: data.type,
+                                        location: data.location,
+                                        imagelink:
+                                            'https://staging.ippu.org/storage/banners/${data.banner}',
+                                        cpdsname: data.topic,
+                                        status: data.attendance_status,
+                                      );
+                                    }));
+                                  },
+                                  child: Text(
+                                    'View Details',
+                                    style: TextStyle(
+                                      fontSize: size.height * 0.017,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
                   SizedBox(
-                    height: size.height * 0.024,
+                    height: size.height * 0.02,
                   ),
                 ],
               );
