@@ -137,14 +137,6 @@ class _FirstDisplaySectionState extends State<FirstDisplaySection>
       final cpds = await authController.getCpds(userId);
       final events = await authController.getEvents(userId);
       final communications = await authController.getAllCommunications(userId);
-      TextEditingController searchController = TextEditingController();
-      String searchQuery = '';
-
-      @override
-      void dispose() {
-        searchController.dispose();
-        super.dispose();
-      }
 
       setState(() {
         totalEvents = events.length;
@@ -377,7 +369,7 @@ class _FirstDisplaySectionState extends State<FirstDisplaySection>
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
         redirectUrl: 'https://staging.ippu.org/login',
-        txRef: Uuid().v1(),
+        txRef: const Uuid().v1(),
         amount: membershipAmount,
         customer: customer,
         paymentOptions: "card, payattitude, barter, bank transfer, ussd",
@@ -394,7 +386,7 @@ class _FirstDisplaySectionState extends State<FirstDisplaySection>
     } else {
       message = "Payment failed,\n try again later";
     }
-    this.showLoading(message);
+    showLoading(message);
   }
 
   Future<void> showLoading(String message) {

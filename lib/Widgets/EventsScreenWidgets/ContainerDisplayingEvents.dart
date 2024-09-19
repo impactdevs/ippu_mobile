@@ -27,6 +27,9 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
 
   bool _showBackToTopButton = false;
   late Future<List<AllEventsModel>> eventDataFuture;
+  List<AllEventsModel> _allEvents = [];
+  List<AllEventsModel> _filteredEvents = [];
+
   @override
   void initState() {
     super.initState();
@@ -88,6 +91,15 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
             status: item['status'] ?? '',
           );
         }).toList();
+
+        // Sort events by start_date in descending order (newest first)
+        eventsData.sort((a, b) => b.start_date.compareTo(a.start_date));
+
+        setState(() {
+          _allEvents = eventsData;
+          _filteredEvents = eventsData;
+        });
+
         return eventsData;
       } else {
         throw Exception('Failed to load events data');
@@ -98,7 +110,18 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
     }
   }
 
-//
+  void _filterEvents(String query) {
+    final filteredEvents = _allEvents.where((event) {
+      final eventNameLower = event.name.toLowerCase();
+      final searchLower = query.toLowerCase();
+      return eventNameLower.contains(searchLower);
+    }).toList();
+
+    setState(() {
+      _filteredEvents = filteredEvents;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -123,45 +146,70 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                 left: size.height * 0.012,
                 right: size.height * 0.012,
                 top: size.height * 0.012),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(
-                    vertical: size.height * 0.004,
-                    horizontal: size.width * 0.035),
-                labelText: 'Search Events by name',
-                labelStyle: GoogleFonts.lato(
-                    fontSize: size.height * 0.022, color: Colors.black38),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _filterEvents,
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(
+                          vertical: size.height * 0.004,
+                          horizontal: size.width * 0.035),
+                      labelText: 'Search Events by name',
+                      labelStyle: GoogleFonts.lato(
+                          fontSize: size.height * 0.018, color: Colors.black38),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: const BorderSide(color: Colors.blue),
+                      ),
+                    ),
+                  ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                  borderSide: const BorderSide(color: Colors.blue),
-                ),
-                suffixIcon: IconButton(
+                SizedBox(width: size.width * 0.02),
+                ElevatedButton(
                   onPressed: () {
                     setState(() {
                       _searchQuery = _searchController.text;
+                      _filterEvents(_searchQuery);
                     });
                   },
-                  icon: const Icon(Icons.search),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                        vertical: size.height * 0.015,
+                        horizontal: size.width * 0.04),
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ),
+                  child: Text(
+                    'Search',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.022,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(left: size.height * 0.020),
-            child: Text(
-              "( Scroll to see more Events and click on the Event to see more details )",
-              style: GoogleFonts.lato(
-                fontSize: size.height * 0.012,
-                fontWeight: FontWeight.bold,
-                color: Colors.lightBlue.withOpacity(0.5),
-              ),
-            ),
-          ),
-          const Divider(),
+          SizedBox(height: size.height * 0.02),
+          // Padding(
+          //   padding: EdgeInsets.only(left: size.height * 0.020),
+          //   child: Text(
+          //     "( Scroll to see more Events and click on the Event to see more details )",
+          //     style: GoogleFonts.lato(
+          //       fontSize: size.height * 0.012,
+          //       fontWeight: FontWeight.bold,
+          //       color: Colors.lightBlue.withOpacity(0.5),
+          //     ),
+          //   ),
+          // ),
+          // const Divider(),
           Expanded(
             child: FutureBuilder<List<AllEventsModel>>(
               future: eventDataFuture,
@@ -180,10 +228,10 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                     ),
                   );
                 } else {
-                  final data = snapshot.data;
-                  if (data != null) {
+                  final data = _filteredEvents;
+                  if (data.isNotEmpty) {
                     return ListView.builder(
-                      // controller: _scrollController,
+                      controller: _scrollController,
                       scrollDirection: Axis.vertical,
                       itemCount: data.length,
                       itemBuilder: (context, index) {
@@ -198,198 +246,189 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                         final eventId = item.id.toString();
                         final imageLink = item.banner_name;
                         final points = item.points.toString();
-                        if (_searchQuery.isEmpty ||
-                            eventName
-                                .toLowerCase()
-                                .contains(_searchQuery.toLowerCase())) {
-                          return InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) {
-                                  return SingleEventDisplay(
-                                    id: eventId.toString(),
-                                    attendance_request: attendanceRequest,
-                                    points: points.toString(),
-                                    normal_rate: rate,
-                                    description: description,
-                                    startDate: startDate,
-                                    endDate: endData,
-                                    member_rate: item.member_rate,
-                                    imagelink:
-                                        'https://staging.ippu.org/storage/banners/$imageLink',
-                                    eventName: eventName,
-                                  );
-                                }),
-                              );
-                            },
+                        return InkWell(
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) {
+                                return SingleEventDisplay(
+                                  id: eventId.toString(),
+                                  attendance_request: attendanceRequest,
+                                  points: points.toString(),
+                                  normal_rate: rate,
+                                  description: description,
+                                  startDate: startDate,
+                                  endDate: endData,
+                                  member_rate: item.member_rate,
+                                  imagelink:
+                                      'https://staging.ippu.org/storage/banners/$imageLink',
+                                  eventName: eventName,
+                                );
+                              }),
+                            ).then((value) {
+                              setState(() {
+                                eventDataFuture = fetchAllEvents();
+                              });
+                            });
+                          },
+                          child: Card(
+                            margin: EdgeInsets.symmetric(
+                              vertical: size.height * 0.01,
+                              horizontal: size.width * 0.05,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            elevation: 5,
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  margin: EdgeInsets.only(
-                                    right: size.height * 0.009,
-                                    left: size.height * 0.009,
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(15),
                                   ),
-                                  height: size.height * 0.35,
-                                  width: size.width * 0.85,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        offset: const Offset(0.8, 1.0),
-                                        blurRadius: 4.0,
-                                        spreadRadius: 0.2,
-                                      ),
-                                    ],
-                                    borderRadius: BorderRadius.circular(5),
-                                    border: Border.all(
-                                        color: Colors.grey.withOpacity(0.5)),
-                                    image: DecorationImage(
-                                      image: NetworkImage(
-                                          'https://staging.ippu.org/storage/banners/$imageLink'),
-                                    ),
+                                  child: Image.network(
+                                    'https://staging.ippu.org/storage/banners/$imageLink',
+                                    height: size.height * 0.2,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
-                                SizedBox(height: size.height * 0.014),
-                                Container(
-                                  width: size.width * 0.7,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color:
-                                        const Color.fromARGB(255, 42, 129, 201),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        offset: const Offset(0.8, 1.0),
-                                        blurRadius: 4.0,
-                                        spreadRadius: 0.2,
+                                Padding(
+                                  padding: EdgeInsets.all(size.height * 0.02),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        eventName,
+                                        style: GoogleFonts.lato(
+                                          fontSize: size.height * 0.018,
+                                          color: Colors.black87,
+                                        ),
                                       ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        SizedBox(height: size.height * 0.008),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Padding(
-                                                padding: EdgeInsets.only(
-                                                    left: size.width * 0.03),
-                                                child: Text(
-                                                  item.name.split(' ').take(4).join(
-                                                      ' '), // Display only the first two words
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize:
-                                                        size.height * 0.014,
+                                      SizedBox(height: size.height * 0.01),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.calendar_today,
+                                                    size: size.height * 0.02,
+                                                    color: Colors.blue,
                                                   ),
+                                                  SizedBox(
+                                                      width: size.width * 0.01),
+                                                  Text(
+                                                    "Start Date",
+                                                    style: GoogleFonts.lato(
+                                                      fontSize:
+                                                          size.height * 0.015,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.black54,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Text(
+                                                extractDate(startDate),
+                                                style: GoogleFonts.lato(
+                                                  fontSize: size.height * 0.015,
+                                                  color: Colors.black54,
                                                 ),
                                               ),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsets.only(
-                                                  right: size.width * 0.03),
-                                              child: Icon(
-                                                Icons.read_more,
-                                                size: size.height * 0.02,
-                                                color: Colors.white,
+                                            ],
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.star,
+                                                    size: size.height * 0.02,
+                                                    color: Colors.amber,
+                                                  ),
+                                                  SizedBox(
+                                                      width: size.width * 0.01),
+                                                  Text(
+                                                    "Points",
+                                                    style: GoogleFonts.lato(
+                                                      fontSize:
+                                                          size.height * 0.015,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.black54,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            )
-                                          ],
-                                        ),
-                                        const Divider(
-                                          color: Colors.white,
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.calendar_month,
-                                                      size: size.height * 0.02,
-                                                      color: Colors.white,
-                                                    ),
-                                                    const Text(
-                                                      "Start Date",
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ],
+                                              Text(
+                                                points,
+                                                style: GoogleFonts.lato(
+                                                  fontSize: size.height * 0.015,
+                                                  color: Colors.black54,
                                                 ),
-                                                Text(
-                                                  extractDate(item.start_date),
-                                                  style: TextStyle(
+                                              ),
+                                            ],
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.info,
+                                                    size: size.height * 0.02,
+                                                    color: Colors.green,
+                                                  ),
+                                                  SizedBox(
+                                                      width: size.width * 0.01),
+                                                  Text(
+                                                    "Status",
+                                                    style: GoogleFonts.lato(
                                                       fontSize:
-                                                          size.height * 0.008,
-                                                      color: Colors.white),
+                                                          size.height * 0.015,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.black54,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Text(
+                                                item.getStatus(),
+                                                style: GoogleFonts.lato(
+                                                  fontSize: size.height * 0.015,
+                                                  color: Colors.black54,
                                                 ),
-                                              ],
-                                            ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                const Text("Points",
-                                                    style: TextStyle(
-                                                        color: Colors.white)),
-                                                Text(
-                                                  item.points,
-                                                  style: TextStyle(
-                                                      fontSize:
-                                                          size.height * 0.008,
-                                                      color: Colors.white),
-                                                )
-                                              ],
-                                            ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                const Text("Status",
-                                                    style: TextStyle(
-                                                        color: Colors.white)),
-                                                Text(
-                                                  item.getStatus(),
-                                                  style: TextStyle(
-                                                      fontSize:
-                                                          size.height * 0.01,
-                                                      color: Colors.white),
-                                                )
-                                              ],
-                                            )
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                SizedBox(height: size.height * 0.022),
                               ],
                             ),
-                          );
-                        } else {
-                          return Container(); // Return an empty container for non-matching items
-                        }
+                          ),
+                        );
                       },
                     );
                   } else {
-                    return const CircularProgressIndicator();
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
                   }
                 }
               },

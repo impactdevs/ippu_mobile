@@ -207,85 +207,47 @@ class _ContainerDisplayingUpcomingCpdsState
                                 }),
                               );
                             },
-                            child: Column(
-                              children: [
-                                Container(
-                                  margin: EdgeInsets.only(
-                                    right: size.height * 0.009,
-                                    left: size.height * 0.009,
-                                  ),
-                                  height: size.height * 0.35,
-                                  width: size.width * 0.85,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        offset: const Offset(0.8, 1.0),
-                                        blurRadius: 4.0,
-                                        spreadRadius: 0.2,
-                                      ),
-                                    ],
-                                    borderRadius: BorderRadius.circular(5),
-                                    border: Border.all(
-                                        color: Colors.grey.withOpacity(0.5)),
-                                    image: DecorationImage(
-                                      image: NetworkImage(
-                                          'https://staging.ippu.org/storage/banners/$imageLink'),
+                            child: Card(
+                              margin: EdgeInsets.symmetric(
+                                vertical: size.height * 0.01,
+                                horizontal: size.width * 0.05,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              elevation: 5,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(15),
+                                    ),
+                                    child: Image.network(
+                                      'https://staging.ippu.org/storage/banners/$imageLink',
+                                      height: size.height * 0.2,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
-                                ),
-                                SizedBox(height: size.height * 0.012),
-                                Container(
-                                  height: size.height * 0.089,
-                                  width: size.width * 0.7,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color:
-                                        const Color.fromARGB(255, 42, 129, 201),
-                                  ),
-                                  child: Center(
+                                  Padding(
+                                    padding: EdgeInsets.all(size.height * 0.02),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        SizedBox(height: size.height * 0.008),
+                                        Text(
+                                          activityName,
+                                          style: GoogleFonts.lato(
+                                            fontSize: size.height * 0.02,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        SizedBox(height: size.height * 0.01),
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsets.only(
-                                                  left: size.width * 0.03),
-                                              child: Text(
-                                                item.topic
-                                                    .split(' ')
-                                                    .take(4)
-                                                    .join(' '),
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: size.height * 0.014,
-                                                ),
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsets.only(
-                                                  right: size.width * 0.01),
-                                              child: Icon(
-                                                Icons.read_more,
-                                                size: size.height * 0.02,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                        const Divider(
-                                          color: Colors.white,
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceEvenly,
                                           children: [
                                             Column(
                                               crossAxisAlignment:
@@ -294,26 +256,32 @@ class _ContainerDisplayingUpcomingCpdsState
                                                 Row(
                                                   children: [
                                                     Icon(
-                                                      Icons.calendar_month,
+                                                      Icons.calendar_today,
                                                       size: size.height * 0.02,
-                                                      color: Colors.white,
+                                                      color: Colors.blue,
                                                     ),
-                                                    const Text(
+                                                    SizedBox(
+                                                        width:
+                                                            size.width * 0.01),
+                                                    Text(
                                                       "Start Date",
-                                                      style: TextStyle(
-                                                        color: Colors.white,
+                                                      style: GoogleFonts.lato(
+                                                        fontSize:
+                                                            size.height * 0.015,
                                                         fontWeight:
                                                             FontWeight.bold,
+                                                        color: Colors.black54,
                                                       ),
                                                     ),
                                                   ],
                                                 ),
                                                 Text(
-                                                  extractDate(item.startDate),
-                                                  style: TextStyle(
-                                                      fontSize:
-                                                          size.height * 0.008,
-                                                      color: Colors.white),
+                                                  extractDate(startDate),
+                                                  style: GoogleFonts.lato(
+                                                    fontSize:
+                                                        size.height * 0.015,
+                                                    color: Colors.black54,
+                                                  ),
                                                 ),
                                               ],
                                             ),
@@ -321,16 +289,72 @@ class _ContainerDisplayingUpcomingCpdsState
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                const Text("Rate",
-                                                    style: TextStyle(
-                                                        color: Colors.white)),
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.location_on,
+                                                      size: size.height * 0.02,
+                                                      color: Colors.red,
+                                                    ),
+                                                    SizedBox(
+                                                        width:
+                                                            size.width * 0.01),
+                                                    Text(
+                                                      "Location",
+                                                      style: GoogleFonts.lato(
+                                                        fontSize:
+                                                            size.height * 0.015,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.black54,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                                 Text(
-                                                  item.type,
-                                                  style: TextStyle(
-                                                      fontSize:
-                                                          size.height * 0.008,
-                                                      color: Colors.white),
-                                                )
+                                                  location,
+                                                  style: GoogleFonts.lato(
+                                                    fontSize:
+                                                        size.height * 0.015,
+                                                    color: Colors.black54,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.star,
+                                                      size: size.height * 0.02,
+                                                      color: Colors.amber,
+                                                    ),
+                                                    SizedBox(
+                                                        width:
+                                                            size.width * 0.01),
+                                                    Text(
+                                                      "Points",
+                                                      style: GoogleFonts.lato(
+                                                        fontSize:
+                                                            size.height * 0.015,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.black54,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Text(
+                                                  points,
+                                                  style: GoogleFonts.lato(
+                                                    fontSize:
+                                                        size.height * 0.015,
+                                                    color: Colors.black54,
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           ],
@@ -338,9 +362,8 @@ class _ContainerDisplayingUpcomingCpdsState
                                       ],
                                     ),
                                   ),
-                                ),
-                                SizedBox(height: size.height * 0.018),
-                              ],
+                                ],
+                              ),
                             ),
                           );
                         } else {

@@ -4,7 +4,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ippu/Providers/ProfilePicProvider.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
 import 'package:ippu/Providers/network.dart';
-import 'package:ippu/Screens/CommunicationScreen.dart';
 import 'package:ippu/Screens/CpdsScreen.dart';
 import 'package:ippu/Screens/Dashboard.dart';
 import 'package:ippu/Screens/EventsScreen.dart';
@@ -124,10 +123,10 @@ class _DefaultScreenState extends State<DefaultScreen> {
 
   int _selectedIndex = 0;
   List Page = [
-    const Dashboard (),
+    const DashboardScreen(),
     const CpdsScreen(),
     const EventsScreen(),
-    const CommunicationScreen(),
+    // const ProfileScreen(),
   ];
   void onItemTapped(int index) {
     setState(() {
@@ -170,11 +169,11 @@ class _DefaultScreenState extends State<DefaultScreen> {
               items: const <BottomNavigationBarItem>[
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.workspace_premium), label: 'CPD'),
+                    icon: Icon(Icons.workspace_premium), label: 'CPDs'),
                 BottomNavigationBarItem(
                     icon: Icon(Icons.event), label: 'Events'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.info), label: 'Communication'),
+                // BottomNavigationBarItem(
+                //     icon: Icon(Icons.person), label: 'Profile'),
               ],
             ),
           );

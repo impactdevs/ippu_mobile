@@ -1,12 +1,9 @@
 import 'dart:math';
 
-import 'package:clean_dialog/clean_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ippu/controllers/auth_controller.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
@@ -351,7 +348,7 @@ class _AttendedSingleCpdDisplayState extends State<AttendedSingleCpdDisplay> {
       scaffoldMessenger.showSnackBar(SnackBar(
         content: Text(
           message,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -361,17 +358,15 @@ class _AttendedSingleCpdDisplayState extends State<AttendedSingleCpdDisplay> {
       ));
     }
 
-    if (message != null) {
-      scaffoldMessenger.showSnackBar(SnackBar(
-          content: Text(
-            message,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+    scaffoldMessenger.showSnackBar(SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
-          backgroundColor: Colors.blue));
-    }
+        ),
+        backgroundColor: Colors.blue));
   }
 }

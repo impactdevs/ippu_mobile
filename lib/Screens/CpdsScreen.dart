@@ -14,8 +14,7 @@ class CpdsScreen extends StatefulWidget {
   State<CpdsScreen> createState() => _CpdsScreenState();
 }
 
-class _CpdsScreenState extends State<CpdsScreen> with TickerProviderStateMixin{
-
+class _CpdsScreenState extends State<CpdsScreen> with TickerProviderStateMixin {
   late TabController _cpdTabController;
 
   @override
@@ -32,93 +31,96 @@ class _CpdsScreenState extends State<CpdsScreen> with TickerProviderStateMixin{
 
   @override
   Widget build(BuildContext context) {
-  final cpds = Provider.of<UserProvider>(context).CPDS;
-  final size = MediaQuery.of(context).size;
-  
+    final cpds = Provider.of<UserProvider>(context).CPDS;
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      drawer:Drawer(
-        width: size.width*0.8,
+      drawer: Drawer(
+        width: size.width * 0.8,
         child: const DrawerWidget(),
       ),
-    appBar: AppBar(
-     
-      flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            color:Color.fromARGB(255, 42, 129, 201)
-          ),
+      appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration:
+              const BoxDecoration(color: Color.fromARGB(255, 42, 129, 201)),
         ),
         actions: [
           Center(
             child: Padding(
-              padding: EdgeInsets.only(right: size.width*0.06),
-              child: Text("All Cpds: $cpds", style: const TextStyle(color: Colors.white),),
+              padding: EdgeInsets.only(right: size.width * 0.06),
+              child: Text(
+                "All Cpds: $cpds",
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
           )
         ],
-        title: Text("CPD Trainings", style: GoogleFonts.lato(
-          fontSize: size.height*0.02,
-          color: Colors.white
-        ),),
+        title: Text(
+          "CPD Trainings",
+          style: GoogleFonts.lato(
+              fontSize: size.height * 0.02, color: Colors.white),
+        ),
         elevation: 0,
-        // 
+        //
         bottom: TabBar(
           indicatorColor: Colors.white,
           controller: _cpdTabController,
           tabs: [
             Tab(
               child: Row(children: [
-                Icon(Icons.workspace_premium,
-                size:size.height*0.014,
-                color: Colors.white,
+                Icon(
+                  Icons.workspace_premium,
+                  size: size.height * 0.014,
+                  color: Colors.white,
                 ),
                 Padding(
-                  padding: EdgeInsets.only(
-                    left: size.width*0.008
+                  padding: EdgeInsets.only(left: size.width * 0.008),
+                  child: Text(
+                    "All CPDS($cpds)",
+                    style: GoogleFonts.lato(
+                        fontSize: size.height * 0.014, color: Colors.white),
                   ),
-                  child: Text("All CPDS($cpds)", style: GoogleFonts.lato(
-                    fontSize: size.height*0.014,
-                    color: Colors.white
-                  ),),
                 ),
               ]),
             ),
             Tab(
               child: Row(children: [
-                Icon(Icons.timeline,
-                size:size.height*0.014,
-                color: Colors.white,
+                Icon(
+                  Icons.timeline,
+                  size: size.height * 0.014,
+                  color: Colors.white,
                 ),
                 Padding(
-                  padding: EdgeInsets.only(
-                    left: size.width*0.004
+                  padding: EdgeInsets.only(left: size.width * 0.004),
+                  child: Text(
+                    "Upcoming CPDS",
+                    style: GoogleFonts.lato(
+                        fontSize: size.height * 0.0130, color: Colors.white),
                   ),
-                  child: Text("Upcoming CPDS", style: GoogleFonts.lato(
-                    fontSize: size.height*0.0130,
-                    color: Colors.white
-                  ),),
                 ),
               ]),
             ),
             Tab(
               child: Row(children: [
-                Icon(Icons.event_seat,
-                size:size.height*0.014,
-                color: Colors.white,
+                Icon(
+                  Icons.event_seat,
+                  size: size.height * 0.014,
+                  color: Colors.white,
                 ),
                 Padding(
-                  padding: EdgeInsets.only(
-                    left: size.width*0.008
+                  padding: EdgeInsets.only(left: size.width * 0.008),
+                  child: Text(
+                    "Attended cpds",
+                    style: GoogleFonts.lato(
+                        fontSize: size.height * 0.012, color: Colors.white),
                   ),
-                  child: Text("Attended cpds", style: GoogleFonts.lato(
-                    fontSize: size.height*0.012,
-                    color: Colors.white
-                  ),),
                 ),
               ]),
             ),
           ],
         ),
-        // 
+        //
       ),
       body: TabBarView(
         controller: _cpdTabController,

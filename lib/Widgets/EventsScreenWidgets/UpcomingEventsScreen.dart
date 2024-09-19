@@ -13,24 +13,28 @@ class _UpcomingEventsScreenState extends State<UpcomingEventsScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: size.height*0.025,),
-            // this section displays upcoming CPDS
-             
-            SizedBox(height: size.height*0.002,),
-            // this container has the container that returns the CPds
-            Container(
-            height: size.height*0.65,
-            width: double.maxFinite,
-            decoration: const BoxDecoration(
-              // color: Colors.blue,
-            ),
-            child: const ContainerDisplayingUpcomingEvents()),
-          ],
-        ),
-      );
+      scrollDirection: Axis.vertical,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: size.height * 0.025,
+          ),
+          // this section displays upcoming CPDS
+
+          SizedBox(
+            height: size.height * 0.002,
+          ),
+          // this container has the container that returns the CPds
+          Container(
+              height: size.height * 0.65,
+              width: double.maxFinite,
+              decoration: const BoxDecoration(
+                  // color: Colors.blue,
+                  ),
+              child: const ContainerDisplayingUpcomingEvents()),
+        ],
+      ),
+    );
   }
 }

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ippu/controllers/auth_controller.dart';
-import 'package:clean_dialog/clean_dialog.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
@@ -40,7 +39,7 @@ class AttendedEventSIngleDisplayScreen extends StatefulWidget {
 
 class _AttendedEventSIngleDisplayScreenState
     extends State<AttendedEventSIngleDisplayScreen> {
-        var random = Random();
+  var random = Random();
 
   @override
   Widget build(BuildContext context) {
@@ -199,11 +198,11 @@ class _AttendedEventSIngleDisplayScreenState
                 height: size.height * 0.022,
               ),
               //
-           
+
               Center(
                 child: widget.status == "Attended"
                     ? ElevatedButton(
-                               style: ElevatedButton.styleFrom(
+                        style: ElevatedButton.styleFrom(
                           backgroundColor: const Color.fromARGB(255, 42, 129,
                               201), // Change button color to green
                           padding: EdgeInsets.all(size.height * 0.024),
@@ -298,7 +297,7 @@ class _AttendedEventSIngleDisplayScreenState
       scaffoldMessenger.showSnackBar(SnackBar(
         content: Text(
           message,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -308,17 +307,15 @@ class _AttendedEventSIngleDisplayScreenState
       ));
     }
 
-    if (message != null) {
-      scaffoldMessenger.showSnackBar(SnackBar(
-          content: Text(
-            message,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+    scaffoldMessenger.showSnackBar(SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
-          backgroundColor: Colors.blue));
-    }
+        ),
+        backgroundColor: Colors.blue));
   }
 }

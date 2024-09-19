@@ -11,7 +11,7 @@ import 'package:ippu/Screens/EducationBackgroundScreen.dart';
 import 'package:ippu/Screens/EventsScreen.dart';
 import 'package:ippu/Screens/WorkExperience.dart';
 import 'package:ippu/Widgets/AuthenticationWidgets/LoginScreen.dart';
-import 'package:ippu/Widgets/SplashScreenWidgets/FirstSplashScreen.dart';
+import 'package:ippu/Widgets/SplashScreenWidgets/SplashScreens.dart';
 import 'package:ippu/firebase_options.dart';
 import 'package:ippu/models/UserProvider.dart';
 import 'package:ippu/services/FirebaseApi.dart';
@@ -34,7 +34,7 @@ class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
@@ -122,7 +122,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                 )
               : isFirstLaunch
-                  ? const FirstSplashScreen()
+                  ? const OnboardingScreens()
                   : Consumer<AuthProvider>(
                       builder: (context, auth, child) {
                         auth.isLoggedIn();

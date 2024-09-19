@@ -42,7 +42,6 @@ class _LoginScreenState extends State<LoginScreen> {
         final authResponse =
             await authController.signIn(_userEmail, _userPassword);
 
-
         // Close the loading indicator dialog
         Navigator.pop(context);
 
@@ -194,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       }));
                                     })
                           : SignInWithAppleButton(
-                            style: SignInWithAppleButtonStyle.white,
+                              style: SignInWithAppleButtonStyle.white,
                               onPressed: () async {
                                 final credential =
                                     await SignInWithApple.getAppleIDCredential(
@@ -215,8 +214,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 var fullName = "$firstName $lastName";
 
                                 final authController = AuthController();
-                                bool response =
-                                    await authController.authenticateWithAppleEmail({"email":credential.email!, "fullName":fullName});
+                                bool response = await authController
+                                    .authenticateWithAppleEmail({
+                                  "email": credential.email!,
+                                  "fullName": fullName
+                                });
 
                                 if (response) {
                                   Navigator.pushReplacement(context,

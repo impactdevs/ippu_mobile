@@ -1,465 +1,1462 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:intl/intl.dart'; // Add this for date formatting
-import 'dart:async';
+import 'dart:convert';
+import 'dart:developer';
 
-class Dashboard extends StatefulWidget {
-  const Dashboard({super.key});
+import 'package:clean_dialog/clean_dialog.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutterwave_standard/core/flutterwave.dart';
+import 'package:flutterwave_standard/models/requests/customer.dart';
+import 'package:flutterwave_standard/models/requests/customizations.dart';
+import 'package:flutterwave_standard/models/responses/charge_response.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:ippu/Screens/CpdsScreen.dart';
+import 'package:ippu/Screens/EventsScreen.dart';
+import 'package:ippu/Screens/JobsScreen.dart';
+import 'package:ippu/Screens/ProfileScreen.dart';
+import 'package:ippu/Widgets/CommunicationScreenWidgets/SingleCommunicationDisplayScreen.dart';
+import 'package:ippu/Widgets/CpdsScreenWidgets/CpdsSingleEventDisplay.dart';
+import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
+import 'package:ippu/Widgets/EventsScreenWidgets/SingleEventDisplay.dart';
+import 'package:ippu/Widgets/HomeScreenWidgets/CalendarScreen.dart';
+import 'package:ippu/Widgets/JobScreenWidgets/SingleJobDetailDisplay.dart';
+import 'package:ippu/models/JobData.dart';
+import 'package:provider/provider.dart';
+import 'package:ippu/Providers/SubscriptionStatus.dart';
+import 'package:ippu/models/UserProvider.dart';
+import 'package:ippu/controllers/auth_controller.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
+import 'package:ippu/env.dart' as env;
+
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({Key? key}) : super(key: key);
 
   @override
-  State<Dashboard> createState() => _DashboardState();
+  _DashboardScreenState createState() => _DashboardScreenState();
 }
 
-class _DashboardState extends State<Dashboard> {
-  final ScrollController _scrollController = ScrollController();
-  Timer? _timer;
-  Map<String, Duration> _eventCountdowns = {};
-  Map<String, Duration> _cpdCountdowns = {};
-  Map<String, Duration> _jobCountdowns = {};
+class _DashboardScreenState extends State<DashboardScreen> {
+  int totalCPDS = 0;
+  int totalEvents = 0;
+  int totalJobs = 0;
+  int totalCommunications = 0;
+  List<dynamic> upcomingEvents = [];
+  List<JobData> availableJobs = [];
+  List<dynamic> upcomingCPDs = [];
+  String latestCommunication = '';
+  bool isLoading = true;
+  final formatter = NumberFormat('#,##0');
+  Map<String, dynamic> latestComm = {};
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(() {
-      setState(() {});
-    });
-    _updateCountdowns();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCountdowns());
+    _loadInitialData();
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  void _loadInitialData() {
+    fetchAllData();
   }
 
-  void _updateCountdowns() {
-    final now = DateTime.now();
-    setState(() {
-      _eventCountdowns = _getUpcomingEvents().asMap().map(
-        (index, item) {
-          final eventDate =
-              DateFormat('MMM d, yyyy').parse(item['date'] as String);
-          return MapEntry(
-            item['title'] as String,
-            eventDate.difference(now),
-          );
-        },
-      );
-      _cpdCountdowns = _getUpcomingCPDs().asMap().map(
-        (index, item) {
-          final cpdDate =
-              DateFormat('MMM d, yyyy').parse(item['date'] as String);
-          return MapEntry(
-            item['title'] as String,
-            cpdDate.difference(now),
-          );
-        },
-      );
-      _jobCountdowns = _getNewJobs().asMap().map(
-        (index, item) {
-          final jobDate =
-              DateFormat('MMM d, yyyy').parse(item['date'] as String);
-          return MapEntry(
-            item['title'] as String,
-            jobDate.difference(now),
-          );
-        },
-      );
-    });
+  Future<List<JobData>> fetchJobData() async {
+    final userData = Provider.of<UserProvider>(context, listen: false).user;
+    const apiUrl = 'https://staging.ippu.org/api/jobs';
+
+    final headers = {
+      'Authorization': 'Bearer ${userData?.token}',
+    };
+
+    try {
+      final response = await http.get(Uri.parse(apiUrl), headers: headers);
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonData = jsonDecode(response.body);
+        final List<dynamic> availableJobs = jsonData['data'];
+
+        return availableJobs.map((item) => JobData.fromJson(item)).toList();
+      } else {
+        throw Exception('Failed to load events data');
+      }
+    } catch (error) {
+      log('Error fetching job data: $error');
+      return [];
+    }
   }
 
-  String _formatDuration(Duration duration) {
-    final days = duration.inDays;
-    final hours = duration.inHours % 24;
-    final minutes = duration.inMinutes % 60;
-    final seconds = duration.inSeconds % 60;
-    return '${days}d ${hours}h ${minutes}m ${seconds}s';
+  Future<void> fetchAllData() async {
+    final userData = Provider.of<UserProvider>(context, listen: false).user;
+    int userId = userData!.id;
+
+    try {
+      final authController = AuthController();
+      final futures = await Future.wait([
+        authController.getCpds(userId),
+        authController.getEvents(userId),
+        authController.getAllCommunications(userId),
+        fetchJobData(),
+      ]);
+
+      final cpds = futures[0];
+      final events = futures[1];
+      final communications = futures[2];
+      final jobs = futures[3] as List<JobData>;
+
+      if (mounted) {
+        setState(() {
+          totalEvents = events.length;
+          totalCPDS = cpds.length;
+          availableJobs = jobs;
+          totalJobs = jobs.length;
+          totalCommunications = communications.length;
+
+          final now = DateTime.now();
+          upcomingEvents = events
+              .where(
+                  (event) => DateTime.parse(event['start_date']).isAfter(now))
+              .toList()
+            ..sort((a, b) => DateTime.parse(a['start_date'])
+                .compareTo(DateTime.parse(b['start_date'])));
+
+          upcomingCPDs = cpds
+              .where((cpd) => DateTime.parse(cpd['start_date']).isAfter(now))
+              .toList()
+            ..sort((a, b) => DateTime.parse(a['start_date'])
+                .compareTo(DateTime.parse(b['start_date'])));
+
+          latestComm = communications.isNotEmpty
+              ? communications.first
+              : {'message': 'No recent communications'};
+          latestCommunication = communications.isNotEmpty
+              ? communications.first['message']
+              : 'No recent communications';
+
+          Provider.of<UserProvider>(context, listen: false)
+              .totalNumberOfCPDS(totalCPDS);
+          Provider.of<UserProvider>(context, listen: false)
+              .totalNumberOfEvents(totalEvents);
+          Provider.of<UserProvider>(context, listen: false)
+              .totalNumberOfCommunications(totalCommunications);
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      log('Error fetching data: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final subscriptionStatus =
+        context.watch<SubscriptionStatusProvider>().status;
+    final profileStatus = context.watch<UserProvider>().profileStatusCheck;
+
     return Scaffold(
+      drawer: Drawer(
+        width: size.width * 0.8,
+        child: const DrawerWidget(),
+      ),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-          automaticallyImplyLeading: false, // Hides the back button
-        title: Row(
-          children: [
-            const CircleAvatar(
-              backgroundImage: AssetImage(
-                  'assets/images/profile_placeholder.png'), // Placeholder image
-              radius: 20, // Adjust the size of the profile picture
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          'IPPU MEMBERSHIP APP',
+          style: GoogleFonts.lato(
+            fontSize: size.height * 0.020,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2A81C9), Color(0xFF1E5F94)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: TextField(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey.shade200,
-                  hintText: 'Search...',
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 20,
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const CalendarScreen())),
+            icon: const Icon(Icons.calendar_month),
+          ),
+        ],
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: fetchAllData,
+              child: Stack(children: [
+                Container(
+                  height: size.height * 0.5,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF2A81C9), Color(0xFF1E5F94)],
+                    ),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
+                ),
+                SafeArea(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(size),
+                        SizedBox(height: size.height * 0.02),
+                        _buildLatestEventCPD(size),
+                        SizedBox(height: size.height * 0.03),
+                        _buildMainContent(
+                            size, subscriptionStatus, profileStatus),
+                      ],
+                    ),
                   ),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                ),
+              ]
+                  // if (subscriptionStatus == 'false')
+                  //   _buildSubscriptionNotification(size),
+                  // if (profileStatus != null && profileStatus)
+                  //   _buildProfileNotification(size),
+                  ),
+            ),
+    );
+  }
+
+  Widget _buildHeader(Size size) {
+    final userData = Provider.of<UserProvider>(context, listen: false).user;
+    return Padding(
+      padding: EdgeInsets.all(size.width * 0.06),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Welcome back,',
+                style: GoogleFonts.lato(
+                    color: Colors.white, fontSize: size.height * 0.020),
+              ),
+              SizedBox(height: size.height * 0.005),
+              SizedBox(
+                width: size.width * 0.7, // Adjust this value as needed
+                child: Text(
+                  userData!.name,
+                  style: GoogleFonts.lato(
+                    color: Colors.white,
+                    fontSize: size.height * 0.032,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            IconButton(
-              icon: const Icon(Icons.menu, color: Colors.black),
-              onPressed: () {
-                // Open navigation drawer or menu
-              },
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Stream<Duration> _countdownStream(DateTime endTime) {
+    return Stream.periodic(const Duration(seconds: 1), (_) {
+      final remaining = endTime.difference(DateTime.now());
+      return remaining > Duration.zero ? remaining : Duration.zero;
+    });
+  }
+
+  Widget _buildLatestEventCPD(Size size) {
+    final latestEvent = upcomingEvents.isNotEmpty ? upcomingEvents.first : null;
+    final latestCPD = upcomingCPDs.isNotEmpty ? upcomingCPDs.first : null;
+
+    if (latestEvent == null && latestCPD == null) {
+      return const SizedBox.shrink();
+    }
+
+    final latestItem = (latestEvent != null && latestCPD != null)
+        ? (DateTime.parse(latestEvent['start_date'])
+                .isBefore(DateTime.parse(latestCPD['start_date']))
+            ? latestEvent
+            : latestCPD)
+        : (latestEvent ?? latestCPD);
+
+    final eventDate = DateTime.parse(latestItem['start_date']);
+    final isEvent = latestItem == latestEvent;
+
+    return Container(
+        margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.1),
+              spreadRadius: 2,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            padding: EdgeInsets.all(size.width * 0.04),
+            decoration: BoxDecoration(
+              color: Colors.blue[600],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isEvent ? Icons.event : Icons.school,
+                  color: Colors.white,
+                  size: size.height * 0.03,
+                ),
+                SizedBox(width: size.width * 0.02),
+                Text(
+                  isEvent ? 'Event Coming Soon' : 'CPD Coming Soon',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.019,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.04, vertical: size.width * 0.04),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEvent ? latestItem['name'] : latestItem['topic'],
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.019,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[800],
+                  ),
+                ),
+                SizedBox(height: size.height * 0.007),
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today,
+                        size: size.height * 0.02, color: Colors.blue[600]),
+                    SizedBox(width: size.width * 0.01),
+                    Text(
+                      DateFormat('MMM dd, yyyy').format(eventDate),
+                      style: GoogleFonts.lato(
+                        fontSize: size.height * 0.016,
+                        color: Colors.blue[600],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: size.height * 0.01),
+                StreamBuilder<Duration>(
+                  stream: _countdownStream(eventDate),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const SizedBox.shrink();
+                    }
+                    final duration = snapshot.data!;
+                    final days = duration.inDays;
+                    final hours = duration.inHours.remainder(24);
+                    final minutes = duration.inMinutes.remainder(60);
+                    return Container(
+                      padding: EdgeInsets.symmetric(
+                        vertical: size.height * 0.01,
+                        horizontal: size.width * 0.02,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.timer,
+                            size: size.height * 0.02,
+                            color: Colors.blue[600],
+                          ),
+                          SizedBox(width: size.width * 0.01),
+                          Text(
+                            days == 0
+                                ? 'Starts in: $hours hrs and $minutes mins'
+                                : days == 1
+                                    ? 'Starts in: $days day, $hours hrs and $minutes mins'
+                                    : 'Starts in: $days days, $hours hrs and $minutes mins',
+                            style: GoogleFonts.lato(
+                                fontSize: size.height * 0.016,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[600]),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: size.height * 0.01),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Builder(
+                        builder: (context) {
+                          DateTime currentDate = DateTime.now();
+                          DateTime startDate =
+                              DateTime.parse(latestItem['start_date']);
+                          DateTime endDate =
+                              DateTime.parse(latestItem['end_date']);
+                          bool attendanceRequest =
+                              latestItem['attendance_request'];
+
+                          if (currentDate.isBefore(endDate)) {
+                            if (currentDate.isAfter(startDate) ||
+                                currentDate.isAtSameMomentAs(startDate)) {
+                              return Text(
+                                "Event is happening",
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.018,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green[600],
+                                ),
+                              );
+                            } else if (attendanceRequest) {
+                              return Text(
+                                "Thank you for booking the event",
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.018,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green[600],
+                                ),
+                              );
+                            } else {
+                              return ElevatedButton(
+                                onPressed: () async {
+                                  isEvent
+                                      ? await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) {
+                                            return SingleEventDisplay(
+                                              id: latestItem['id'].toString(),
+                                              attendance_request: latestItem[
+                                                  'attendance_request'],
+                                              points: latestItem['points']
+                                                  .toString(),
+                                              normal_rate: latestItem['rate'],
+                                              description:
+                                                  latestItem['details'],
+                                              startDate:
+                                                  latestItem['start_date'],
+                                              endDate: latestItem['end_date'],
+                                              member_rate:
+                                                  latestItem['member_rate'],
+                                              imagelink:
+                                                  'https://staging.ippu.org/storage/banners/${latestItem['banner_name']}',
+                                              eventName: latestItem['name'],
+                                            );
+                                          }),
+                                        ).then((value) {
+                                          setState(() {
+                                            fetchAllData();
+                                          });
+                                        })
+                                      : await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) {
+                                            return CpdsSingleEventDisplay(
+                                              attendance_request: latestItem[
+                                                  'attendance_request'],
+                                              content: latestItem['content'],
+                                              target_group:
+                                                  latestItem['target_group'],
+                                              startDate:
+                                                  latestItem['start_date'],
+                                              endDate: latestItem['end_date'],
+                                              rate: latestItem['location']
+                                                  .toString(),
+                                              type: latestItem['type'],
+                                              cpdId:
+                                                  latestItem['id'].toString(),
+                                              attendees: latestItem['points']
+                                                  .toString(),
+                                              imagelink:
+                                                  'https://staging.ippu.org/storage/banners/${latestItem['banner']}',
+                                              cpdsname: latestItem['topic'],
+                                              normal_rate:
+                                                  latestItem['normal_rate'],
+                                              member_rate:
+                                                  latestItem['members_rate'],
+                                              location: latestItem['location'],
+                                            );
+                                          }),
+                                        ).then((value) {
+                                          setState(() {
+                                            fetchAllData();
+                                          });
+                                        });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue[600],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: size.height * 0.015),
+                                ),
+                                child: Text(
+                                  isEvent
+                                      ? 'Book for Attendance'
+                                      : 'Book for CPD',
+                                  style: GoogleFonts.lato(
+                                    fontSize: size.height * 0.018,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              );
+                            }
+                          } else {
+                            if (attendanceRequest) {
+                              return Text(
+                                "Thank you for attending this event",
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.018,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[600],
+                                ),
+                              );
+                            } else {
+                              return Text(
+                                "This event happened, you missed!",
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.018,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[600],
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ]));
+  }
+
+  String extractDate(String fullDate) {
+    List<String> parts = fullDate.split('T');
+    return parts[0];
+  }
+
+  Widget _buildLatestCommunication(Size size) {
+    return Container(
+      margin: EdgeInsets.all(size.width * 0.04),
+      padding: EdgeInsets.all(size.width * 0.04),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  'Latest Communication',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.022,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return SingleCommunicationDisplayScreen(
+                      communicationtitle: latestComm['title'],
+                      communicationbody: latestComm['message'],
+                      communicationdate: extractDate(latestComm['created_at']),
+                    );
+                  }));
+                },
+                child: Text(
+                  'Read More',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.015,
+                    color: Colors.blue[600],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: size.height * 0.013),
+          Html(
+            data: latestCommunication,
+            style: {
+              "body": Style(
+                fontSize: FontSize(size.height * 0.018),
+                maxLines: 3,
+                textOverflow: TextOverflow.ellipsis,
+                color: Colors.black,
+              ),
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingCPDs(Size size) {
+    return Padding(
+      padding: EdgeInsets.all(size.width * 0.04),
+      child: Container(
+        margin: EdgeInsets.all(size.width * 0.04),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Introduction Card
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8.0,
-                        horizontal: 16.0,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Upcoming CPDs',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.024,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[800],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const CpdsScreen()));
+                  },
+                  child: Text(
+                    'View More',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.015,
+                      color: Colors.blue[600],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: size.height * 0.02),
+            if (upcomingCPDs.isNotEmpty)
+              SizedBox(
+                height: size.height * 0.2,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: upcomingCPDs.length,
+                  itemBuilder: (context, index) {
+                    final cpd = upcomingCPDs[index];
+                    return Container(
+                      width: size.width * 0.7,
+                      margin: EdgeInsets.only(right: size.width * 0.04),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.1),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      child: const Text(
-                        'Hello [Name], Welcome to IPPU!',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: size.width * 0.02,
+                                vertical: size.height * 0.004,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[600],
+                                borderRadius: const BorderRadius.only(
+                                  topRight: Radius.circular(15),
+                                  bottomLeft: Radius.circular(15),
+                                ),
+                              ),
+                              child: Text(
+                                '${cpd['points']} points',
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.016,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.all(size.width * 0.04),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  cpd['topic'],
+                                  style: GoogleFonts.lato(
+                                    fontSize: size.height * 0.019,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue[800],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: size.height * 0.01),
+                                Row(
+                                  children: [
+                                    Icon(Icons.calendar_today,
+                                        size: size.height * 0.02,
+                                        color: Colors.blue[600]),
+                                    SizedBox(width: size.width * 0.01),
+                                    Text(
+                                      DateFormat('MMM dd, yyyy').format(
+                                          DateTime.parse(cpd['start_date'])),
+                                      style: GoogleFonts.lato(
+                                        fontSize: size.height * 0.016,
+                                        color: Colors.blue[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: size.height * 0.008),
+                                Row(
+                                  children: [
+                                    Icon(Icons.access_time,
+                                        size: size.height * 0.02,
+                                        color: Colors.blue[600]),
+                                    SizedBox(width: size.width * 0.01),
+                                    Text(
+                                      'Duration: ${cpd['hours']} hours',
+                                      style: GoogleFonts.lato(
+                                        fontSize: size.height * 0.016,
+                                        color: Colors.blue[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: size.height * 0.008),
+                                Row(
+                                  children: [
+                                    Icon(Icons.group,
+                                        size: size.height * 0.02,
+                                        color: Colors.blue[600]),
+                                    SizedBox(width: size.width * 0.01),
+                                    Expanded(
+                                      child: Text(
+                                        'Target: ${cpd['target_group']}',
+                                        style: GoogleFonts.lato(
+                                          fontSize: size.height * 0.016,
+                                          color: Colors.blue[600],
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              )
+            else
+              Container(
+                padding: EdgeInsets.all(size.width * 0.04),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'No upcoming CPDs',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.018,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainContent(Size size, subscriptionStatus, profileStatus) {
+    return Container(
+      width: size.width,
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildLatestCommunication(size),
+          SizedBox(height: size.height * 0.02),
+          _buildUpcomingEvents(size),
+          _buildUpcomingCPDs(size),
+          _buildWarningCards(size, subscriptionStatus, profileStatus),
+          _buildHotJobs(size),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHotJobs(Size size) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+      child: Container(
+        margin: EdgeInsets.all(size.width * 0.03),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Hot Jobs',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.024,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[800],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return const JobsScreen();
+                    }));
+                  },
+                  child: Text(
+                    'View More',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.015,
+                      color: Colors.blue[600],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: size.height * 0.01),
+            if (availableJobs.isNotEmpty)
+              SizedBox(
+                height: size.height * 0.25,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: availableJobs.length,
+                  itemBuilder: (context, index) {
+                    final job = availableJobs[index];
+                    return Container(
+                      width: size.width * 0.7,
+                      margin: EdgeInsets.only(right: size.width * 0.04),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.1),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(size.width * 0.04),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              job.title,
+                              style: GoogleFonts.lato(
+                                fontSize: size.height * 0.019,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[800],
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: size.height * 0.01),
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today,
+                                    size: size.height * 0.02,
+                                    color: Colors.blue[600]),
+                                SizedBox(width: size.width * 0.01),
+                                Text(
+                                  'Deadline: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(job.deadline.toString()))}',
+                                  style: GoogleFonts.lato(
+                                    fontSize: size.height * 0.016,
+                                    color: Colors.blue[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: size.height * 0.01),
+                            Row(
+                              children: [
+                                Icon(Icons.access_time,
+                                    size: size.height * 0.02,
+                                    color: DateTime.now().isBefore(
+                                            DateTime.parse(
+                                                job.deadline.toString()))
+                                        ? Colors.green[600]
+                                        : Colors.red[600]),
+                                SizedBox(width: size.width * 0.01),
+                                Text(
+                                  DateTime.now().isBefore(DateTime.parse(
+                                          job.deadline.toString()))
+                                      ? 'Status: Applications Open'
+                                      : 'Status: Applications Closed',
+                                  style: GoogleFonts.lato(
+                                    fontSize: size.height * 0.014,
+                                    color: DateTime.now().isBefore(
+                                            DateTime.parse(
+                                                job.deadline.toString()))
+                                        ? Colors.green[600]
+                                        : Colors.red[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        SingleJobDetailDisplayScreen(
+                                      title: job.title,
+                                      description: job.description,
+                                      deadline: job.deadline.toString(),
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue[600],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                    vertical: size.height * 0.015,
+                                    horizontal: size.width * 0.05),
+                              ),
+                              child: Text(
+                                'Check Out',
+                                style: GoogleFonts.lato(
+                                  fontSize: size.height * 0.018,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    );
+                  },
+                ),
+              )
+            else
+              Container(
+                padding: EdgeInsets.all(size.width * 0.04),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Discover everything you need to stay updated: from upcoming events and CPDs to subscribing easily from your convenience and accessing your certificates. We’re here to help you make the most of every opportunity!',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                        height: 1.4,
-                      ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'No hot jobs available',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.018,
+                      color: Colors.grey[600],
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUpcomingEvents(Size size) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+      child: Container(
+        margin: EdgeInsets.all(size.width * 0.03),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Upcoming Events',
+                  style: GoogleFonts.lato(
+                    fontSize: size.height * 0.024,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[800],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const EventsScreen()));
+                  },
+                  child: Text(
+                    'View More',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.015,
+                      color: Colors.blue[600],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: size.height * 0.01),
+            if (upcomingEvents.isNotEmpty)
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount:
+                    upcomingEvents.length > 3 ? 3 : upcomingEvents.length,
+                itemBuilder: (context, index) {
+                  final event = upcomingEvents[index];
+                  return Container(
+                    margin: EdgeInsets.only(bottom: size.height * 0.01),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
                       children: [
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            // Login action
-                          },
-                          icon: const Icon(Icons.login),
-                          label: const Text('Login'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.blue, // Blue border color
-                            side: const BorderSide(
-                                color: Colors.blue), // Blue border color
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 16,
+                        Padding(
+                          padding: EdgeInsets.all(size.width * 0.05),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(size.width * 0.03),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[600],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.event,
+                                  color: Colors.white,
+                                  size: size.height * 0.03,
+                                ),
+                              ),
+                              SizedBox(width: size.width * 0.04),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      event['name'],
+                                      style: GoogleFonts.lato(
+                                        fontSize: size.height * 0.019,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue[800],
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    SizedBox(height: size.height * 0.007),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.calendar_today,
+                                            size: size.height * 0.02,
+                                            color: Colors.blue[600]),
+                                        SizedBox(width: size.width * 0.01),
+                                        Text(
+                                          DateFormat('MMM dd, yyyy').format(
+                                              DateTime.parse(
+                                                  event['start_date'])),
+                                          style: GoogleFonts.lato(
+                                            fontSize: size.height * 0.016,
+                                            color: Colors.blue[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: size.height * 0.01),
+                                    Text(
+                                      'Rate: UGX. ${formatter.format(double.parse(event['rate']))}',
+                                      style: GoogleFonts.lato(
+                                        fontSize: size.height * 0.015,
+                                        color: Colors.blue[800],
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (event['location'] != null) ...[
+                                      SizedBox(height: size.height * 0.008),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.location_on,
+                                              size: size.height * 0.02,
+                                              color: Colors.blue[600]),
+                                          SizedBox(width: size.width * 0.01),
+                                          Expanded(
+                                            child: Text(
+                                              event['location'],
+                                              style: GoogleFonts.lato(
+                                                fontSize: size.height * 0.016,
+                                                color: Colors.blue[600],
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.02,
+                              vertical: size.height * 0.005,
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[800],
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(15),
+                                bottomLeft: Radius.circular(15),
+                              ),
+                            ),
+                            child: Text(
+                              '${event['points']} points',
+                              style: GoogleFonts.lato(
+                                fontSize: size.height * 0.014,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
+                  );
+                },
+              )
+            else
+              Container(
+                padding: EdgeInsets.all(size.width * 0.04),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Title "Upcoming Events"
-            const AnimationConfiguration.staggeredList(
-              position: 0,
-              duration: Duration(milliseconds: 375),
-              child: ScaleAnimation(
-                child: FadeInAnimation(
+                child: Center(
                   child: Text(
-                    "Upcoming Events",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                    'No upcoming events',
+                    style: GoogleFonts.lato(
+                      fontSize: size.height * 0.018,
+                      color: Colors.grey[600],
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // Horizontally scrollable cards for upcoming events
-            SizedBox(
-              height: 200, // Adjust height as needed
-              child: ScrollableCardList(
-                items: _getUpcomingEvents(),
-                countdowns: _eventCountdowns,
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Title "Upcoming CPDs"
-            const AnimationConfiguration.staggeredList(
-              position: 1,
-              duration: Duration(milliseconds: 375),
-              child: ScaleAnimation(
-                child: FadeInAnimation(
-                  child: Text(
-                    "Upcoming CPDs",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Horizontally scrollable cards for upcoming CPDs
-            SizedBox(
-              height: 200, // Adjust height as needed
-              child: ScrollableCardList(
-                items: _getUpcomingCPDs(),
-                countdowns: _cpdCountdowns,
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Title "New Jobs"
-            const AnimationConfiguration.staggeredList(
-              position: 2,
-              duration: Duration(milliseconds: 375),
-              child: ScaleAnimation(
-                child: FadeInAnimation(
-                  child: Text(
-                    "New Jobs",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Horizontally scrollable cards for new jobs
-            SizedBox(
-              height: 200, // Adjust height as needed
-              child: ScrollableCardList(
-                items: _getNewJobs(),
-                countdowns: _jobCountdowns,
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Title "Unread Communications"
-            const AnimationConfiguration.staggeredList(
-              position: 3,
-              duration: Duration(milliseconds: 375),
-              child: ScaleAnimation(
-                child: FadeInAnimation(
-                  child: Text(
-                    "Unread Communications",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Horizontally scrollable cards for unread communications
-            SizedBox(
-              height: 200, // Adjust height as needed
-              child: ScrollableCardList(
-                items: _getUnreadCommunications(),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  List<Map<String, dynamic>> _getUpcomingEvents() {
-    return [
-      {
-        'title': 'Event 1',
-        'venue': 'Venue A',
-        'date': 'Aug 25, 2024',
-      },
-      {
-        'title': 'Event 2',
-        'venue': 'Venue B',
-        'date': 'Sep 10, 2024',
-      },
+  // if (subscriptionStatus == 'false')
+  //   _buildSubscriptionNotification(size),
+  // if (profileStatus != null && profileStatus)
+  //   _buildProfileNotification(size),
 
-
-      
-      // Add more events as needed
-    ];
+  Widget _buildWarningCards(Size size, subscriptionStatus, profileStatus) {
+    return Column(
+      children: [
+        if (profileStatus != null && profileStatus)
+          _buildWarningCard(
+            size,
+            "Please complete your profile",
+            () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ProfileScreen()));
+            },
+          ),
+        if (subscriptionStatus == 'false')
+          _buildWarningCard(
+            size,
+            "Please complete your subscription",
+            () {
+              final userData =
+                  Provider.of<UserProvider>(context, listen: false).user;
+              if (userData!.membership_amount == '0') {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Subscription Not Available'),
+                      content: const Text(
+                          'Guests cannot subscribe. Please change your Account Type from Guest to another type in order to subscribe.'),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('Change Account Type'),
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ProfileScreen()));
+                          },
+                        ),
+                        TextButton(
+                          child: const Text('OK'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              } else {
+                _handlePaymentInitialization(userData.name, userData.email,
+                    userData.phone_no!, userData.membership_amount!);
+              }
+            },
+          ),
+      ],
+    );
   }
 
-  List<Map<String, dynamic>> _getUpcomingCPDs() {
-    return [
-      {
-        'title': 'CPD 1',
-        'venue': 'Venue C',
-        'date': 'Aug 30, 2024',
-      },
-      {
-        'title': 'CPD 2',
-        'venue': 'Venue D',
-        'date': 'Sep 15, 2024',
-      },
-      // Add more CPDs as needed
-    ];
+  _handlePaymentInitialization(String fullName, String email,
+      String phoneNumber, String membershipAmount) async {
+    final Customer customer = Customer(
+      name: fullName,
+      phoneNumber: phoneNumber,
+      email: email,
+    );
+
+    final Flutterwave flutterwave = Flutterwave(
+        context: context,
+        publicKey: env.Env.FLW_PUBLIC_KEY,
+        currency: "UGX",
+        redirectUrl: 'https://staging.ippu.org/login',
+        txRef: const Uuid().v1(),
+        amount: membershipAmount,
+        customer: customer,
+        paymentOptions: "card, payattitude, barter, bank transfer, ussd",
+        customization: Customization(
+            title: "IPPU PAYMENT",
+            logo:
+                "https://ippu.or.ug/wp-content/uploads/2020/03/cropped-Logo-192x192.png"),
+        isTestMode: false);
+    final ChargeResponse response = await flutterwave.charge();
+    String message;
+    if (response.success == true) {
+      message = "Payment successful,\n thank you!";
+      sendRequest();
+    } else {
+      message = "Payment failed,\n try again later";
+    }
+    showLoading(message);
   }
 
-  List<Map<String, dynamic>> _getNewJobs() {
-    return [
-      {
-        'title': 'Job 1',
-        'venue': 'Company A',
-        'date': 'Aug 28, 2024',
-      },
-      {
-        'title': 'Job 2',
-        'venue': 'Company B',
-        'date': 'Sep 05, 2024',
-      },
-      // Add more jobs as needed
-    ];
-  }
-
-  List<Map<String, dynamic>> _getUnreadCommunications() {
-    return [
-      {
-        'title': 'Communication 1',
-        'venue': 'Location E',
-        'date': 'Aug 20, 2024',
-      },
-      {
-        'title': 'Communication 2',
-        'venue': 'Location F',
-        'date': 'Aug 22, 2024',
-      },
-      // Add more communications as needed
-    ];
-  }
-}
-
-class ScrollableCardList extends StatelessWidget {
-  final List<Map<String, dynamic>> items;
-  final Map<String, Duration>? countdowns;
-
-  const ScrollableCardList({super.key, required this.items, this.countdowns});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimationLimiter(
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          final title = item['title'] as String;
-          final countdown = countdowns?[title] ?? Duration.zero;
-          return AnimationConfiguration.staggeredList(
-            position: index,
-            duration: const Duration(milliseconds: 375),
-            child: ScaleAnimation(
-              child: FadeInAnimation(
-                child: Container(
-                  width: 250, // Adjust width to make the cards wider
-                  margin: const EdgeInsets.symmetric(
-                      horizontal:
-                          16), // Increase margin to show a bit of the next card
-                  child: Card(
-                    color: Colors.white, // Set background color to white
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 2, // Adjust elevation to add subtle shadow
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            item['venue'] as String,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black54,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item['date'] as String,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black54,
-                            ),
-                          ),
-                          if (countdowns != null) const SizedBox(height: 8),
-                          if (countdowns != null)
-                            Text(
-                              'Time remaining: ${_formatDuration(countdown!)}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.redAccent,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
+  Future<void> showLoading(String message) {
+    return showDialog(
+      context: context,
+      builder: (context) => CleanDialog(
+        title: 'success',
+        content: message,
+        backgroundColor: Colors.blue,
+        titleTextStyle: const TextStyle(
+            fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white),
+        contentTextStyle: const TextStyle(fontSize: 16, color: Colors.white),
+        actions: [
+          CleanDialogActionButtons(
+            actionTitle: 'OK',
+            onPressed: () => Navigator.pop(context),
+          )
+        ],
       ),
     );
   }
 
-  String _formatDuration(Duration duration) {
-    final days = duration.inDays;
-    final hours = duration.inHours % 24;
-    final minutes = duration.inMinutes % 60;
-    final seconds = duration.inSeconds % 60;
-    return '${days}d ${hours}h ${minutes}m ${seconds}s';
+  void showBottomNotification(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.TOP,
+      backgroundColor: Colors.black,
+      textColor: Colors.white,
+    );
+  }
+
+  Future<void> sendRequest() async {
+    AuthController authController = AuthController();
+
+    //try catch
+    try {
+      final response = await authController.subscribe();
+      //check if response contains message key
+      if (response.containsKey("message")) {
+        //notify the SubscriptionStatusProvider
+        if (mounted) {
+          context
+              .read<SubscriptionStatusProvider>()
+              .setSubscriptionStatus("Pending");
+        }
+        //show bottom notification
+        showBottomNotification(
+            "your request has been sent! You will be approved");
+      } else {
+        //show bottom notification
+        showBottomNotification("Something went wrong");
+      }
+    } catch (e) {
+      showBottomNotification("Something went wrong");
+    }
   }
 }
+
+Widget _buildWarningCard(Size size, String message, VoidCallback onPressed) {
+  return Padding(
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: size.height * 0.01),
+        padding: EdgeInsets.all(size.width * 0.03),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF7676),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.lato(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: size.height * 0.018,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                'Complete',
+                style: GoogleFonts.lato(
+                  color: const Color(0xFFFF7676),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ));
+}
+
+  // ... Rest of the code remains the same

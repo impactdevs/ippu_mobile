@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import 'package:ippu/Providers/ProfilePicProvider.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
 import 'package:ippu/Screens/EducationBackgroundScreen.dart';
@@ -33,14 +32,12 @@ class InformationScreen extends StatefulWidget {
   const InformationScreen({super.key});
 
   @override
-  _InformationScreenState createState() => _InformationScreenState();
+  State<InformationScreen> createState() => _InformationScreenState();
 }
 
 class _InformationScreenState extends State<InformationScreen> {
   bool isProfileIncomplete = true;
   int numberOfCertificates = 0;
-  final ImagePicker _picker = ImagePicker();
-  late File _image;
   late Future<UserData> profileData;
   var random = Random();
   bool isDownloading = false;
@@ -346,7 +343,8 @@ class _InformationScreenState extends State<InformationScreen> {
 
   Future<int> certificateCount() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    final apiUrl = 'https://staging.ippu.org/api/attended-events/${userData?.id}';
+    final apiUrl =
+        'https://staging.ippu.org/api/attended-events/${userData?.id}';
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
     };
@@ -427,7 +425,7 @@ class _InformationScreenState extends State<InformationScreen> {
       scaffoldMessenger.showSnackBar(SnackBar(
         content: Text(
           message,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -437,18 +435,16 @@ class _InformationScreenState extends State<InformationScreen> {
       ));
     }
 
-    if (message != null) {
-      scaffoldMessenger.showSnackBar(SnackBar(
-          content: Text(
-            message,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+    scaffoldMessenger.showSnackBar(SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
-          backgroundColor: Colors.blue));
-    }
+        ),
+        backgroundColor: Colors.blue));
   }
 
   String formatExpiryDate(String? expiryDate) {

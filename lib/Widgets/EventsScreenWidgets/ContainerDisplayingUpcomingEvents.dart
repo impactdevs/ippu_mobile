@@ -22,15 +22,7 @@ class _ContainerDisplayingUpcomingEventsState
   AuthController authController = AuthController();
 
   final ScrollController _scrollController = ScrollController();
-  final TextEditingController _searchController = TextEditingController();
   final String _searchQuery = '';
-
-  void _scrollToTop() {
-    _scrollController.animateTo(0,
-        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-  }
-
-  bool _showBackToTopButton = false;
 
   late Future<List<AllEventsModel>> eventDataFuture;
   @override
@@ -41,10 +33,7 @@ class _ContainerDisplayingUpcomingEventsState
   }
 
   void _updateScrollVisibility() {
-    setState(() {
-      _showBackToTopButton = _scrollController.offset >
-          _scrollController.position.maxScrollExtent / 2;
-    });
+    setState(() {});
   }
 
   // function fetching upcoming events
@@ -52,7 +41,8 @@ class _ContainerDisplayingUpcomingEventsState
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/upcoming-events/${userData?.id}';
+    final apiUrl =
+        'https://staging.ippu.org/api/upcoming-events/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -65,7 +55,7 @@ class _ContainerDisplayingUpcomingEventsState
         final Map<String, dynamic> jsonData = jsonDecode(response.body);
         final List<dynamic> eventData = jsonData['data'];
         List<AllEventsModel> eventsData = eventData.map((item) {
-          if(item['points']==null){
+          if (item['points'] == null) {
             item['points'] = '0';
           }
           return AllEventsModel(
@@ -76,7 +66,8 @@ class _ContainerDisplayingUpcomingEventsState
             normal_rate: item['rate'] ?? '',
             attandence_request: item['attendance_request'] ?? '',
             member_rate: item['member_rate'] ?? '',
-            points:item['points'].toString(), // Convert points to string if needed
+            points:
+                item['points'].toString(), // Convert points to string if needed
             attachment_name: item['attachment_name'] ?? '',
             banner_name: item['banner_name'] ?? '',
             details: item['details'] ?? '',
@@ -92,10 +83,11 @@ class _ContainerDisplayingUpcomingEventsState
       return []; // Return an empty list or handle the error in your UI
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-      final profileStatus = context.watch<UserProvider>().profileStatusCheck;
+    final profileStatus = context.watch<UserProvider>().profileStatusCheck;
     return Scaffold(
       body: Column(
         children: [
@@ -132,7 +124,7 @@ class _ContainerDisplayingUpcomingEventsState
                   final data = snapshot.data;
                   if (data != null) {
                     return ListView.builder(
-                      // controller: _scrollController,
+                      controller: _scrollController,
                       scrollDirection: Axis.vertical,
                       itemCount: data.length,
                       itemBuilder: (context, index) {
@@ -154,7 +146,7 @@ class _ContainerDisplayingUpcomingEventsState
                                 .contains(_searchQuery.toLowerCase())) {
                           return InkWell(
                             onTap: () {
-                              if(profileStatus == true){
+                              if (profileStatus == true) {
                                 _showDialog();
                                 return;
                               }
@@ -177,90 +169,46 @@ class _ContainerDisplayingUpcomingEventsState
                                 }),
                               );
                             },
-                            child: Column(
-                              children: [
-                                Container(
-                                  margin: EdgeInsets.only(
-                                    right: size.height * 0.009,
-                                    left: size.height * 0.009,
-                                  ),
-                                  height: size.height * 0.35,
-                                  width: size.width * 0.85,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        offset: const Offset(0.8, 1.0),
-                                        blurRadius: 4.0,
-                                        spreadRadius: 0.2,
-                                      ),
-                                    ],
-                                    borderRadius: BorderRadius.circular(5),
-                                    border: Border.all(
-                                        color: Colors.grey.withOpacity(0.5)),
-                                    image: DecorationImage(
-                                      image: NetworkImage(
-                                          'https://staging.ippu.org/storage/banners/$imageLink'),
+                            child: Card(
+                              margin: EdgeInsets.symmetric(
+                                vertical: size.height * 0.01,
+                                horizontal: size.width * 0.05,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              elevation: 5,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(15),
+                                    ),
+                                    child: Image.network(
+                                      'https://staging.ippu.org/storage/banners/$imageLink',
+                                      height: size.height * 0.2,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
-                                ),
-                                SizedBox(height: size.height * 0.014),
-                                Container(
-                                  width: size.width * 0.7,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: const Color.fromARGB(255, 42, 129, 201),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        offset: const Offset(0.8, 1.0),
-                                        blurRadius: 4.0,
-                                        spreadRadius: 0.2,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
+                                  Padding(
+                                    padding: EdgeInsets.all(size.height * 0.02),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        SizedBox(height: size.height * 0.008),
+                                        Text(
+                                          eventName,
+                                          style: GoogleFonts.lato(
+                                            fontSize: size.height * 0.018,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        SizedBox(height: size.height * 0.01),
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                  left: size.width * 0.03),
-                                              child: Text(
-                                                item.name.split(' ').take(4).join(' '), // Display only the first two words
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: size.height * 0.014,
-                                                ),
-                                              ),
-                                            ),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsets.only(
-                                                  right: size.width * 0.03),
-                                              child: Icon(
-                                                Icons.read_more,
-                                                size: size.height * 0.02,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                        const Divider(
-                                          color: Colors.white,
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceEvenly,
                                           children: [
                                             Column(
                                               crossAxisAlignment:
@@ -269,26 +217,32 @@ class _ContainerDisplayingUpcomingEventsState
                                                 Row(
                                                   children: [
                                                     Icon(
-                                                      Icons.calendar_month,
+                                                      Icons.calendar_today,
                                                       size: size.height * 0.02,
-                                                      color: Colors.white,
+                                                      color: Colors.blue,
                                                     ),
-                                                    const Text(
+                                                    SizedBox(
+                                                        width:
+                                                            size.width * 0.01),
+                                                    Text(
                                                       "Start Date",
-                                                      style: TextStyle(
-                                                        color: Colors.white,
+                                                      style: GoogleFonts.lato(
+                                                        fontSize:
+                                                            size.height * 0.015,
                                                         fontWeight:
                                                             FontWeight.bold,
+                                                        color: Colors.black54,
                                                       ),
                                                     ),
                                                   ],
                                                 ),
                                                 Text(
-                                                  extractDate(item.start_date),
-                                                  style: TextStyle(
-                                                      fontSize:
-                                                          size.height * 0.008,
-                                                      color: Colors.white),
+                                                  extractDate(startDate),
+                                                  style: GoogleFonts.lato(
+                                                    fontSize:
+                                                        size.height * 0.015,
+                                                    color: Colors.black54,
+                                                  ),
                                                 ),
                                               ],
                                             ),
@@ -296,16 +250,36 @@ class _ContainerDisplayingUpcomingEventsState
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                const Text("Points",
-                                                    style: TextStyle(
-                                                        color: Colors.white)),
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.star,
+                                                      size: size.height * 0.02,
+                                                      color: Colors.amber,
+                                                    ),
+                                                    SizedBox(
+                                                        width:
+                                                            size.width * 0.01),
+                                                    Text(
+                                                      "Points",
+                                                      style: GoogleFonts.lato(
+                                                        fontSize:
+                                                            size.height * 0.015,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.black54,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                                 Text(
-                                                  item.points,
-                                                  style: TextStyle(
-                                                      fontSize:
-                                                          size.height * 0.008,
-                                                      color: Colors.white),
-                                                )
+                                                  points,
+                                                  style: GoogleFonts.lato(
+                                                    fontSize:
+                                                        size.height * 0.015,
+                                                    color: Colors.black54,
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           ],
@@ -313,9 +287,8 @@ class _ContainerDisplayingUpcomingEventsState
                                       ],
                                     ),
                                   ),
-                                ),
-                                SizedBox(height: size.height * 0.022),
-                              ],
+                                ],
+                              ),
                             ),
                           );
                         } else {
@@ -343,7 +316,7 @@ class _ContainerDisplayingUpcomingEventsState
     return parts[0];
   }
 
-    void _showDialog() {
+  void _showDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {

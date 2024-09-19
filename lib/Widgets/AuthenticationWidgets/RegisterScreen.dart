@@ -12,16 +12,14 @@ class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String _email = '';
   String _username = '';
-  String _password = '';
   String _confirmPassword = '';
-  final bool _agreedToTerms = false;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   late var _accountTypes;
@@ -92,7 +90,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       AuthController authController = AuthController();
       final response = await authController.signUp(requestData);
-
 
       // Close the loading indicator dialog
       if (mounted) {
@@ -251,9 +248,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 }
                                 return null;
                               },
-                              onSaved: (value) {
-                                _password = value!;
-                              },
+                              onSaved: (value) {},
                             ),
                             SizedBox(height: size.height * 0.018),
                             TextFormField(

@@ -108,11 +108,18 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           widget.eventName,
           style: GoogleFonts.lato(
             textStyle: const TextStyle(color: Colors.white),
           ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
         ),
         backgroundColor: const Color(0xFF2A81C9),
         elevation: 0,
@@ -121,7 +128,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
           future: loadProfile(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              final profileData = snapshot.data as UserData;
+              var profile = snapshot.data;
               return SingleChildScrollView(
                 scrollDirection: Axis.vertical,
                 child: Padding(
@@ -166,7 +173,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
                               ),
                             ),
                           ),
-                          Spacer(),
+                          const Spacer(),
                           IconButton(
                             icon: const Icon(
                               Icons.share,
@@ -285,10 +292,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
                                   ),
                                 ),
                                 onPressed: () {
-                                  // _handlePaymentInitialization(profileData.name,
-                                  //     profileData.email, profileData.phone_no!);
-                                        sendAttendanceRequest(widget.id);
-
+                                  _showPaymentDialog(size, profile);
                                 },
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(
@@ -386,6 +390,74 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
     );
   }
 
+  final TextEditingController _amountController = TextEditingController();
+
+  // Function to show the payment mode dialog
+  void _showPaymentDialog(Size size, profile) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Payment Mode'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Cash'),
+                onTap: () async {
+                  sendAttendanceRequest(widget.id);
+                  Navigator.pop(context, true);
+                },
+              ),
+              ListTile(
+                title: const Text('Cashless'),
+                onTap: () {
+                  Navigator.pop(context, true);
+                  // Show a dialog to enter the amount for cashless payment
+                  _showCashlessPaymentDialog(size, profile);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Function to show the dialog for cashless payment
+  void _showCashlessPaymentDialog(Size size, profile) {
+    _amountController.text =
+        widget.normal_rate.toString(); // Set default to event fee
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Enter Amount to Pay'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _amountController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Amount'),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                // Trigger the Flutterwave payment process
+                _handlePaymentInitialization(
+                    profile.name, profile.email, profile.phone_no.toString());
+              },
+              child: const Text('Pay'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   String extractDate(String fullDate) {
     List<String> parts = fullDate.split('T');
     return parts[0];
@@ -457,7 +529,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
         redirectUrl: 'https://staging.ippu.org/login',
-        txRef: Uuid().v1(),
+        txRef: const Uuid().v1(),
         amount: isMember() ? widget.member_rate : widget.normal_rate,
         customer: customer,
         paymentOptions: "card, payattitude, barter, bank transfer, ussd",
@@ -588,7 +660,7 @@ class EventInfoColumn extends StatelessWidget {
         ),
         Text(
           value,
-          style: TextStyle(fontSize: 14),
+          style: const TextStyle(fontSize: 14),
         ),
       ],
     );
