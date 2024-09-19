@@ -60,9 +60,9 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
     try {
       final AuthController authController = AuthController();
       final futures = await Future.wait([
-        authController.getEvents(1980),
-        authController.getCpds(1980),
-        authController.getAllCommunications(1980),
+        authController.getPublicEvents(),
+        authController.getPublicCpds(),
+        authController.getPublicCommunications(),
         fetchJobData(),
       ]);
 
