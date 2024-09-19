@@ -21,32 +21,24 @@ class _LoginScreenState extends State<LoginScreen> {
   String _userEmail = '';
   String _userPassword = '';
   bool _isLoginPasswordVisible = false;
-  bool _isSigningIn = false; // Add a boolean variable to track sign-in process
+  bool _isSigningIn = false;
 
   Future<void> _loginForm() async {
     if (_loginFormKey.currentState!.validate()) {
       _loginFormKey.currentState!.save();
 
       try {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          },
-        );
+        setState(() {
+          _isSigningIn = true;
+        });
 
         AuthController authController = AuthController();
         final authResponse =
             await authController.signIn(_userEmail, _userPassword);
 
-        // Close the loading indicator dialog
-        Navigator.pop(context);
+        if (!mounted) return;
 
         if (authResponse.containsKey('error')) {
-          // Handle authentication error
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
                 "Invalid credentials, check your email and password and try again!"),
@@ -54,15 +46,20 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) {
-            //save the fcm token to the database
             return const DefaultScreen();
           }));
         }
       } catch (e) {
-        // Handle unexpected errors
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Something went wrong. Please try again later."),
         ));
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSigningIn = false;
+          });
+        }
       }
     }
   }
@@ -151,15 +148,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                     _isSigningIn = true;
                                   });
 
-                                  // Implement Google Sign In here
                                   final authController = AuthController();
                                   bool response =
                                       await authController.signInWithGoogle();
 
+                                  if (!mounted) return;
+
                                   if (response) {
                                     Navigator.pushReplacement(context,
                                         MaterialPageRoute(builder: (context) {
-                                      //save the fcm token to the database
                                       return const DefaultScreen();
                                     }));
                                   } else {
@@ -171,14 +168,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                     );
                                   }
 
-                                  setState(() {
-                                    _isSigningIn = false;
-                                  });
+                                  if (mounted) {
+                                    setState(() {
+                                      _isSigningIn = false;
+                                    });
+                                  }
                                 }),
                       SizedBox(
                         height: size.height * 0.01,
                       ),
-                      //check if platform is android
                       Platform.isAndroid
                           ? buttonItem(
                               "assets/phone.svg",
@@ -194,47 +192,76 @@ class _LoginScreenState extends State<LoginScreen> {
                                     })
                           : SignInWithAppleButton(
                               style: SignInWithAppleButtonStyle.white,
-                              onPressed: () async {
-                                final credential =
-                                    await SignInWithApple.getAppleIDCredential(
-                                  scopes: [
-                                    AppleIDAuthorizationScopes.email,
-                                    AppleIDAuthorizationScopes.fullName,
-                                  ],
-                                );
-                                var firstName = "";
-                                var lastName = "";
-                                if (credential.givenName != null) {
-                                  firstName = "${credential.givenName}";
-                                }
-                                if (credential.familyName != null) {
-                                  lastName = "${credential.familyName}";
-                                }
+                              onPressed: _isSigningIn
+                                  ? () {}
+                                  : () async {
+                                      setState(() {
+                                        _isSigningIn = true;
+                                      });
 
-                                var fullName = "$firstName $lastName";
+                                      try {
+                                        final credential = await SignInWithApple
+                                            .getAppleIDCredential(
+                                          scopes: [
+                                            AppleIDAuthorizationScopes.email,
+                                            AppleIDAuthorizationScopes.fullName,
+                                          ],
+                                        );
 
-                                final authController = AuthController();
-                                bool response = await authController
-                                    .authenticateWithAppleEmail({
-                                  "email": credential.email!,
-                                  "fullName": fullName
-                                });
+                                        if (!mounted) return;
 
-                                if (response) {
-                                  Navigator.pushReplacement(context,
-                                      MaterialPageRoute(builder: (context) {
-                                    //save the fcm token to the database
-                                    return const DefaultScreen();
-                                  }));
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          "Something went wrong. Please try again later."),
-                                    ),
-                                  );
-                                }
-                              },
+                                        var firstName = "";
+                                        var lastName = "";
+                                        if (credential.givenName != null) {
+                                          firstName = "${credential.givenName}";
+                                        }
+                                        if (credential.familyName != null) {
+                                          lastName = "${credential.familyName}";
+                                        }
+
+                                        var fullName = "$firstName $lastName";
+
+                                        final authController = AuthController();
+                                        bool response = await authController
+                                            .authenticateWithAppleEmail({
+                                          "email": credential.email!,
+                                          "fullName": fullName
+                                        });
+
+                                        if (!mounted) return;
+
+                                        if (response) {
+                                          Navigator.pushReplacement(context,
+                                              MaterialPageRoute(
+                                                  builder: (context) {
+                                            return const DefaultScreen();
+                                          }));
+                                        } else {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                  "Something went wrong. Please try again later."),
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                                "Apple Sign In failed. Please try again."),
+                                          ),
+                                        );
+                                      } finally {
+                                        if (mounted) {
+                                          setState(() {
+                                            _isSigningIn = false;
+                                          });
+                                        }
+                                      }
+                                    },
                             ),
                       SizedBox(
                         height: size.height * 0.01,
@@ -249,8 +276,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         height: size.height * 0.01,
                       ),
                       SizedBox(
-                        width: size.width, // Set the desired width
-                        height: size.height * 0.06, // Set the desired height
+                        width: size.width,
+                        height: size.height * 0.06,
                         child: TextFormField(
                           decoration: InputDecoration(
                             labelText: 'Email',
@@ -262,7 +289,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your email';
                             }
-                            // You can add more validation here if needed
                             return null;
                           },
                           onSaved: (value) {
@@ -272,8 +298,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: size.height * 0.028),
                       SizedBox(
-                        width: size.width, // Set the desired width
-                        height: size.height * 0.06, // Set the desired height
+                        width: size.width,
+                        height: size.height * 0.06,
                         child: TextFormField(
                           decoration: InputDecoration(
                             labelText: 'Password',
@@ -299,7 +325,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a password';
                             }
-                            // You can add more validation here if needed
                             return null;
                           },
                           onSaved: (value) {
@@ -310,18 +335,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(height: size.height * 0.034),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 42, 129,
-                              201), // Change button color to green
+                          backgroundColor:
+                              const Color.fromARGB(255, 42, 129, 201),
                           padding: EdgeInsets.all(size.height * 0.011),
                         ),
                         onPressed: _isSigningIn ? null : _loginForm,
-                        child: const Text('Sign In',
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 25)),
+                        child: _isSigningIn
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : const Text('Sign In',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 25)),
                       ),
                       SizedBox(height: size.height * 0.020),
                       Row(
-                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Padding(
                             padding: EdgeInsets.only(left: size.width * 0.08),
