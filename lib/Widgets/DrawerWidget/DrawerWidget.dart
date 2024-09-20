@@ -30,6 +30,19 @@ class DrawerWidget extends StatefulWidget {
 
 class _DrawerWidgetState extends State<DrawerWidget> {
   AuthController authController = AuthController();
+  late AuthProvider _authProvider;
+  late UserProvider _userProvider;
+  late ProfilePicProvider _profilePicProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _authProvider = Provider.of<AuthProvider>(context, listen: false);
+    _userProvider = Provider.of<UserProvider>(context, listen: false);
+    _profilePicProvider =
+        Provider.of<ProfilePicProvider>(context, listen: false);
+  }
+
   void _showDialog() {
     showDialog(
       context: context,
@@ -53,8 +66,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final userData = Provider.of<UserProvider>(context).user;
-    var url = context.watch<ProfilePicProvider>().profilePic;
+    final userData = _userProvider.user;
+    var url = _profilePicProvider.profilePic;
     //split the url using / and get the last element,
     var lastElement = url.split('/').last;
 
@@ -63,7 +76,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
         ? 'https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes-thumbnail.png'
         : url;
     var profilePhoto = NetworkImage(networkUrl);
-    final profileStatus = context.watch<UserProvider>().profileStatusCheck;
+    final profileStatus = _userProvider.profileStatusCheck;
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -344,7 +357,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 prefs.clear();
                 await DefaultCacheManager().emptyCache();
 
-                context.read<AuthProvider>().isLoggedIn();
+                _authProvider.isLoggedIn();
 
                 Navigator.pushAndRemoveUntil(
                   context,

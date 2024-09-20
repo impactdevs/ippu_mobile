@@ -59,8 +59,14 @@ abstract class AuthRestClient {
   @GET(AppEndpoints.communicationsEndPoint)
   Future<dynamic> getAllCommunications({@Path() required int user_id});
 
+  @GET(AppEndpoints.communicationsEndPoint)
+  Future<dynamic> getPublicCommunications();
+
   @GET(AppEndpoints.cpdsEndPoint)
   Future<dynamic> getCpds({@Path() required int user_id});
+
+  @GET(AppEndpoints.cpdsEndPoint)
+  Future<dynamic> getPublicCpds();
 
   //attended cpds
   @GET(AppEndpoints.myCpdsEndPoint)
@@ -68,6 +74,9 @@ abstract class AuthRestClient {
 
   @GET(AppEndpoints.eventsEndPoint)
   Future<dynamic> getEvents({@Path() required int user_id});
+
+  @GET(AppEndpoints.eventsEndPoint)
+  Future<dynamic> getPublicEvents();
 
   @GET(AppEndpoints.downloadEventCertificate)
   Future<dynamic> downloadEventCertificate({@Path() required int event});

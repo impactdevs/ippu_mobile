@@ -243,6 +243,23 @@ class AuthController {
     }
   }
 
+  Future<List<dynamic>> getPublicCpds() async {
+    final dio = Dio();
+    final client = AuthRestClient(dio);
+    dio.options.headers['Authorization'] = "Bearer ${await getAccessToken()}";
+    //'X-Requested-With': 'XMLHttpRequest'
+    dio.options.headers['X-Requested-With'] = "XMLHttpRequest";
+    //print what is being sent
+    // dio.interceptors.add(LogInterceptor(responseBody: true));
+
+    try {
+      final response = await client.getPublicCpds();
+      return response['data'];
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<List<dynamic>> getAllCommunications(int userId) async {
     final dio = Dio();
     final client = AuthRestClient(dio);
@@ -251,6 +268,20 @@ class AuthController {
 
     try {
       final response = await client.getAllCommunications(user_id: userId);
+      return response['data'].values.toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> getPublicCommunications() async {
+    final dio = Dio();
+    final client = AuthRestClient(dio);
+    dio.options.headers['Authorization'] = "Bearer ${await getAccessToken()}";
+    dio.options.headers['X-Requested-With'] = "XMLHttpRequest";
+
+    try {
+      final response = await client.getPublicCommunications();
       return response['data'].values.toList();
     } catch (e) {
       return [];
@@ -282,6 +313,20 @@ class AuthController {
     dio.options.headers['X-Requested-With'] = ['XMLHttpRequest'];
     try {
       final response = await client.getEvents(user_id: userId);
+      return response['data'];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> getPublicEvents() async {
+    final dio = Dio();
+    final client = AuthRestClient(dio);
+    print("Bearer ${await getAccessToken()}");
+    dio.options.headers['Authorization'] = "Bearer ${await getAccessToken()}";
+    dio.options.headers['X-Requested-With'] = ['XMLHttpRequest'];
+    try {
+      final response = await client.getPublicEvents();
       return response['data'];
     } catch (e) {
       return [];
