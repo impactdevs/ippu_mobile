@@ -19,6 +19,7 @@ import 'package:ippu/Widgets/CpdsScreenWidgets/CpdsSingleEventDisplay.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
 import 'package:ippu/Widgets/EventsScreenWidgets/SingleEventDisplay.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/CalendarScreen.dart';
+import 'package:ippu/Widgets/HomeScreenWidgets/upcoming_events.dart';
 import 'package:ippu/Widgets/JobScreenWidgets/SingleJobDetailDisplay.dart';
 import 'package:ippu/models/JobData.dart';
 import 'package:provider/provider.dart';
@@ -31,10 +32,10 @@ import 'package:uuid/uuid.dart';
 import 'package:ippu/env.dart' as env;
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
@@ -216,8 +217,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         SizedBox(height: size.height * 0.02),
                         _buildLatestEventCPD(size, profileStatus),
                         SizedBox(height: size.height * 0.03),
-                        _buildMainContent(
-                            size, subscriptionStatus, profileStatus),
+                        _buildMainContent(size, subscriptionStatus,
+                            profileStatus, upcomingEvents),
                       ],
                     ),
                   ),
@@ -864,7 +865,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMainContent(Size size, subscriptionStatus, profileStatus) {
+  Widget _buildMainContent(
+      Size size, subscriptionStatus, profileStatus, upcomingEvents) {
     return Container(
       width: size.width,
       decoration: BoxDecoration(
@@ -878,7 +880,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           _buildLatestCommunication(size),
           SizedBox(height: size.height * 0.02),
-          _buildUpcomingEvents(size, profileStatus),
+          UpcomingEventsWidget(
+            upcomingEvents: upcomingEvents,
+            profileStatus: profileStatus,
+            showBottomNotification: (message) =>
+                showBottomNotification(message),
+            navigateToEventsScreen: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EventsScreen()),
+              );
+            },
+          ),
           _buildUpcomingCPDs(size, profileStatus),
           _buildWarningCards(size, subscriptionStatus, profileStatus),
           _buildHotJobs(size, profileStatus),
@@ -1068,221 +1081,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Center(
                   child: Text(
                     'No hot jobs available',
-                    style: GoogleFonts.lato(
-                      fontSize: size.height * 0.018,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUpcomingEvents(Size size, profileStatus) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-      child: Container(
-        margin: EdgeInsets.all(size.width * 0.03),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Upcoming Events',
-                  style: GoogleFonts.lato(
-                    fontSize: size.height * 0.024,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[800],
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    if (profileStatus != null && profileStatus) {
-                      showBottomNotification(
-                          'Please complete your profile first!');
-                    } else {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const EventsScreen()));
-                    }
-                  },
-                  child: Text(
-                    'View More',
-                    style: GoogleFonts.lato(
-                      fontSize: size.height * 0.015,
-                      color: Colors.blue[600],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: size.height * 0.01),
-            if (upcomingEvents.isNotEmpty)
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount:
-                    upcomingEvents.length > 3 ? 3 : upcomingEvents.length,
-                itemBuilder: (context, index) {
-                  final event = upcomingEvents[index];
-                  return Container(
-                    margin: EdgeInsets.only(bottom: size.height * 0.01),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blue.withOpacity(0.1),
-                          spreadRadius: 2,
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(size.width * 0.05),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(size.width * 0.03),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[600],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.event,
-                                  color: Colors.white,
-                                  size: size.height * 0.03,
-                                ),
-                              ),
-                              SizedBox(width: size.width * 0.04),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      event['name'],
-                                      style: GoogleFonts.lato(
-                                        fontSize: size.height * 0.019,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue[800],
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(height: size.height * 0.007),
-                                    Row(
-                                      children: [
-                                        Icon(Icons.calendar_today,
-                                            size: size.height * 0.02,
-                                            color: Colors.blue[600]),
-                                        SizedBox(width: size.width * 0.01),
-                                        Text(
-                                          DateFormat('MMM dd, yyyy').format(
-                                              DateTime.parse(
-                                                  event['start_date'])),
-                                          style: GoogleFonts.lato(
-                                            fontSize: size.height * 0.016,
-                                            color: Colors.blue[600],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: size.height * 0.01),
-                                    Text(
-                                      'Rate: UGX. ${formatter.format(double.parse(event['rate']))}',
-                                      style: GoogleFonts.lato(
-                                        fontSize: size.height * 0.015,
-                                        color: Colors.blue[800],
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    if (event['location'] != null) ...[
-                                      SizedBox(height: size.height * 0.008),
-                                      Row(
-                                        children: [
-                                          Icon(Icons.location_on,
-                                              size: size.height * 0.02,
-                                              color: Colors.blue[600]),
-                                          SizedBox(width: size.width * 0.01),
-                                          Expanded(
-                                            child: Text(
-                                              event['location'],
-                                              style: GoogleFonts.lato(
-                                                fontSize: size.height * 0.016,
-                                                color: Colors.blue[600],
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.02,
-                              vertical: size.height * 0.005,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[800],
-                              borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(15),
-                                bottomLeft: Radius.circular(15),
-                              ),
-                            ),
-                            child: Text(
-                              '${event['points']} points',
-                              style: GoogleFonts.lato(
-                                fontSize: size.height * 0.014,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              )
-            else
-              Container(
-                padding: EdgeInsets.all(size.width * 0.04),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withOpacity(0.1),
-                      spreadRadius: 2,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    'No upcoming events',
                     style: GoogleFonts.lato(
                       fontSize: size.height * 0.018,
                       color: Colors.grey[600],
