@@ -8,6 +8,7 @@ import 'package:ippu/Screens/EducationBackgroundScreen.dart';
 import 'package:ippu/Screens/EventsScreen.dart';
 import 'package:ippu/Screens/JobsScreen.dart';
 import 'package:ippu/Screens/OurCoreValues.dart';
+import 'package:ippu/Screens/ProfileScreen.dart';
 import 'package:ippu/Screens/SettingsScreen.dart';
 import 'package:ippu/Screens/WhoWeAreScreen.dart';
 import 'package:ippu/Screens/WorkExperience.dart';
@@ -74,13 +75,19 @@ class DrawerWidget extends StatelessWidget {
 
   Widget _buildDrawerHeader(
       BuildContext context, UserData userData, String profilePhotoUrl) {
-    return UserAccountsDrawerHeader(
-      decoration: const BoxDecoration(color: Color(0xFF2A81C9)),
-      currentAccountPicture:
-          CircleAvatar(backgroundImage: NetworkImage(profilePhotoUrl)),
-      accountName: Text(userData.name,
-          style: const TextStyle(fontWeight: FontWeight.bold)),
-      accountEmail: Text(userData.email),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
+      },
+      child: UserAccountsDrawerHeader(
+        decoration: const BoxDecoration(color: Color(0xFF2A81C9)),
+        currentAccountPicture:
+            CircleAvatar(backgroundImage: NetworkImage(profilePhotoUrl)),
+        accountName: Text(userData.name,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        accountEmail: Text(userData.email),
+      ),
     );
   }
 

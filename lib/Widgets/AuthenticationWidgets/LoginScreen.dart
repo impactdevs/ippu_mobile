@@ -36,8 +36,8 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isSigningIn = true);
       try {
         final authResponse = await AuthController().signIn(
-          _emailController.text,
-          _passwordController.text,
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
         );
         if (!mounted) return;
         if (authResponse.containsKey('error')) {
@@ -159,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
               );
               if (value == null || value.isEmpty) {
                 return 'Please enter your email';
-              } else if (!emailRegExp.hasMatch(value)) {
+              } else if (!emailRegExp.hasMatch(value.trim())) {
                 return 'Please enter a valid email';
               }
               return null;
@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     "Forgot password?",
                     style: GoogleFonts.lato(
-                      fontSize: size.height * 0.014,
+                      fontSize: size.height * 0.016,
                       color: Colors.white,
                     ),
                   ),

@@ -54,7 +54,7 @@ class _WelcomeState extends State<PhoneAuthLogin> {
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [  
+        children: [
           const SizedBox(height: 20),
           Center(
             child: Column(
