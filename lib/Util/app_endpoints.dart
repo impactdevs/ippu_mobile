@@ -1,5 +1,5 @@
 class AppEndpoints {
-  static const String baseUrl = 'https://staging.ippu.org/api';
+  static const String baseUrl = 'https://ippu.org/api';
 
   static const String loginEndPoint = "/login";
   static const String regiserEndPoint = "/register";
