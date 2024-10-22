@@ -35,10 +35,8 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
 
   Future<List<JobData>> fetchJobData() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    // Define the URL with  userData.id
     const apiUrl = 'https://staging.ippu.org/api/jobs';
 
-    // Define the headers with the bearer token
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
     };
@@ -48,34 +46,30 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonData = jsonDecode(response.body);
         final List<dynamic> availableJobs = jsonData['data'];
-        log(availableJobs.toString());
-        List<JobData> jobs = availableJobs.map((item) {
-          return JobData(
-            id: item['id'],
-            title: item['title'],
-            description: item['description'],
-            visibleFrom: item['visibleFrom'],
-            visibleTo: item['visibleTo'],
-            deadline: item['deadline'],
-          );
-        }).toList();
-        return jobs;
+        return availableJobs.map((item) => JobData.fromJson(item)).toList();
       } else {
-        throw Exception('Failed to load events data');
+        throw Exception('Failed to load jobs data');
       }
     } catch (error) {
-      //catch the exception
-      return []; // Return an empty list or handle the error in your UI
+      log('Error fetching job data: $error');
+      return [];
     }
   }
 
   Future<void> _fetchPublicData() async {
     try {
       final AuthController authController = AuthController();
-      final events = await authController.getEvents(1980);
-      final cpds = await authController.getCpds(1980);
-      final communications = await authController.getAllCommunications(1980);
-      final jobs = await fetchJobData();
+      final futures = await Future.wait([
+        authController.getPublicEvents(),
+        authController.getPublicCpds(),
+        authController.getPublicCommunications(),
+        fetchJobData(),
+      ]);
+
+      final events = futures[0];
+      final cpds = futures[1];
+      final communications = futures[2];
+      final jobs = futures[3] as List<JobData>;
 
       setState(() {
         final now = DateTime.now();
@@ -111,7 +105,6 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
     final Size size = MediaQuery.of(context).size;
 
     return Scaffold(
-        // appBar: _buildAppBar(size),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : SafeArea(
@@ -153,18 +146,14 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
   }
 
   Widget _buildCarouselItem(String imagePath, Size size) {
-    return Builder(
-      builder: (BuildContext context) {
-        return Container(
-          width: size.width,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(imagePath),
-              fit: BoxFit.cover,
-            ),
-          ),
-        );
-      },
+    return Container(
+      width: size.width,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(imagePath),
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 
@@ -312,14 +301,15 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
           ),
           SizedBox(height: size.height * 0.02),
           items.isNotEmpty
-              ? ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: items.length > 3 ? 3 : items.length,
-                  itemBuilder: (context, index) => Padding(
-                    padding: EdgeInsets.only(bottom: size.height * 0.02),
-                    child: itemBuilder(items[index]),
-                  ),
+              ? Column(
+                  children: items
+                      .take(3)
+                      .map((item) => Padding(
+                            padding:
+                                EdgeInsets.only(bottom: size.height * 0.02),
+                            child: itemBuilder(item),
+                          ))
+                      .toList(),
                 )
               : _buildNoDataContainer(emptyMessage, size),
         ],
@@ -330,57 +320,98 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
   Widget _buildEventCard(dynamic event, Size size) {
     return Card(
       elevation: 4,
+      color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue[50]!, Colors.blue[100]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.blue.withOpacity(0.1),
-              spreadRadius: 2,
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(size.width * 0.04),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                event['name'],
-                style: GoogleFonts.lato(
-                  fontSize: size.height * 0.018,
-                  color: Colors.blue[800],
-                  letterSpacing: 0.5,
+              // Banner image
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(15)),
+                child: Image.network(
+                  'https://staging.ippu.org/storage/banners/${event['banner_name']}',
+                  height: size.height * 0.15,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: size.height * 0.15,
+                      color: Colors.grey[300],
+                      child: Icon(Icons.image_not_supported,
+                          color: Colors.grey[600]),
+                    );
+                  },
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: size.height * 0.015),
-              _buildInfoRow(
-                icon: Icons.calendar_today,
-                text: DateFormat('MMM dd, yyyy')
-                    .format(DateTime.parse(event['start_date'])),
-                size: size,
-                color: Colors.blue[600]!,
-              ),
-              SizedBox(height: size.height * 0.01),
-              _buildInfoRow(
-                icon: Icons.location_on,
-                text: event['venue'] ?? 'Venue TBA',
-                size: size,
-                color: Colors.blue[600]!,
-              ),
+              // Event details
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.white, Colors.blue[100]!],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius:
+                      const BorderRadius.vertical(bottom: Radius.circular(15)),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(size.width * 0.04),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event['name'],
+                        style: GoogleFonts.lato(
+                          fontSize: size.height * 0.018,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[800],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: size.height * 0.01),
+                      _buildInfoRow(
+                        icon: Icons.calendar_today,
+                        text: DateFormat('MMM dd, yyyy')
+                            .format(DateTime.parse(event['start_date'])),
+                        size: size,
+                        color: Colors.blue[600]!,
+                      ),
+                      SizedBox(height: size.height * 0.005),
+                      _buildInfoRow(
+                        icon: Icons.location_on,
+                        text: event['venue'] ?? 'Venue TBA',
+                        size: size,
+                        color: Colors.blue[600]!,
+                      ),
+                    ],
+                  ),
+                ),
+              )
             ],
           ),
-        ),
+          Positioned(
+            top: 10,
+            right: 10,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blue[600],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Event',
+                style: GoogleFonts.lato(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: size.height * 0.014,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -414,64 +445,116 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.green[50]!, Colors.green[100]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(size.width * 0.04),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                cpd['topic'],
-                style: GoogleFonts.lato(
-                  fontSize: size.height * 0.018,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[800],
+              // Banner image
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(15)),
+                child: Image.network(
+                  'https://staging.ippu.org/storage/banners/${cpd['banner']}',
+                  height: size.height * 0.15,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: size.height * 0.15,
+                      color: Colors.grey[300],
+                      child: Icon(Icons.image_not_supported,
+                          color: Colors.grey[600]),
+                    );
+                  },
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: size.height * 0.01),
-              Row(
-                children: [
-                  Icon(Icons.calendar_today,
-                      size: size.height * 0.02, color: Colors.green[600]),
-                  SizedBox(width: size.width * 0.02),
-                  Text(
-                    DateFormat('MMM dd, yyyy')
-                        .format(DateTime.parse(cpd['start_date'])),
-                    style: GoogleFonts.lato(
-                      fontSize: size.height * 0.016,
-                      color: Colors.green[600],
-                    ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.white, Colors.blue[100]!],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              SizedBox(height: size.height * 0.01),
-              Row(
-                children: [
-                  Icon(Icons.access_time,
-                      size: size.height * 0.02, color: Colors.green[600]),
-                  SizedBox(width: size.width * 0.02),
-                  Text(
-                    '${cpd['duration'] ?? 'Duration TBA'} hours',
-                    style: GoogleFonts.lato(
-                      fontSize: size.height * 0.016,
-                      color: Colors.green[600],
-                    ),
+                  borderRadius:
+                      const BorderRadius.vertical(bottom: Radius.circular(15)),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(size.width * 0.04),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        cpd['topic'],
+                        style: GoogleFonts.lato(
+                          fontSize: size.height * 0.018,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[800],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: size.height * 0.01),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today,
+                              size: size.height * 0.02,
+                              color: Colors.blue[600]),
+                          SizedBox(width: size.width * 0.02),
+                          Text(
+                            DateFormat('MMM dd, yyyy')
+                                .format(DateTime.parse(cpd['start_date'])),
+                            style: GoogleFonts.lato(
+                              fontSize: size.height * 0.016,
+                              color: Colors.blue[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: size.height * 0.01),
+                      Row(
+                        children: [
+                          Icon(Icons.access_time,
+                              size: size.height * 0.02,
+                              color: Colors.blue[600]),
+                          SizedBox(width: size.width * 0.02),
+                          Text(
+                            '${cpd['duration'] ?? 'Duration TBA'} hours',
+                            style: GoogleFonts.lato(
+                              fontSize: size.height * 0.016,
+                              color: Colors.blue[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ],
           ),
-        ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blue[600],
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(15),
+                  bottomLeft: Radius.circular(15),
+                ),
+              ),
+              child: Text(
+                'CPD',
+                style: GoogleFonts.lato(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: size.height * 0.014,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
