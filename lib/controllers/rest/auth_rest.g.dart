@@ -13,7 +13,7 @@ class _AuthRestClient implements AuthRestClient {
     this._dio, {
     this.baseUrl,
   }) {
-    baseUrl ??= 'https://staging.ippu.org/api';
+    baseUrl ??= 'https://ippu.org/api';
   }
 
   final Dio _dio;
@@ -360,7 +360,7 @@ class _AuthRestClient implements AuthRestClient {
     )
         .compose(
           _dio.options,
-          '/communications/',
+          '/communications/{user_id}}',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -404,7 +404,7 @@ class _AuthRestClient implements AuthRestClient {
     )
         .compose(
           _dio.options,
-          '/cpds/',
+          '/cpds/{user_id}',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -470,7 +470,7 @@ class _AuthRestClient implements AuthRestClient {
     )
         .compose(
           _dio.options,
-          '/events/',
+          '/events/{user_id}',
           queryParameters: queryParameters,
           data: _data,
         )
