@@ -47,7 +47,7 @@ class _WorkExperienceState extends State<WorkExperience> {
       required String description,
       required String position,
       required int id}) async {
-    const String apiUrl = 'https://staging.ippu.org/api/work-experience';
+    const String apiUrl = 'https://ippu.org/api/work-experience';
 
     final Map<String, dynamic> requestData = {
       "title": title,
@@ -87,7 +87,7 @@ class _WorkExperienceState extends State<WorkExperience> {
       required String position,
       required int id,
       required String experience_id}) async {
-    const String apiUrl = 'https://staging.ippu.org/api/edit-work-experience';
+    const String apiUrl = 'https://ippu.org/api/edit-work-experience';
 
     final Map<String, dynamic> requestData = {
       "title": title,
@@ -453,7 +453,7 @@ class _WorkExperienceState extends State<WorkExperience> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
     final userId = userData?.id;
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/work-experience/$userId';
+    final apiUrl = 'https://ippu.org/api/work-experience/$userId';
 
     // Define the headers with the bearer token
     final headers = {

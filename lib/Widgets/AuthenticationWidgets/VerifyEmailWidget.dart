@@ -76,7 +76,7 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
                 final email = widget.email;
                 final response = await http.post(
                     Uri.parse(
-                        'https://staging.ippu.org/api/profile/resend-verification-code'),
+                        'https://ippu.org/api/profile/resend-verification-code'),
                     body: {'email': email});
                 if (response.statusCode == 200) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -131,7 +131,7 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
     final email = widget.email;
 
     final response = await http.post(
-        Uri.parse('https://staging.ippu.org/api/profile/verify-email'),
+        Uri.parse('https://ippu.org/api/profile/verify-email'),
         body: {'email': email, 'code': verificationCode.toString()});
     if (response.statusCode == 200) {
       return true;

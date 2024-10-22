@@ -35,7 +35,7 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
 
   Future<List<JobData>> fetchJobData() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    const apiUrl = 'https://staging.ippu.org/api/jobs';
+    const apiUrl = 'https://ippu.org/api/jobs';
 
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
@@ -332,7 +332,7 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(15)),
                 child: Image.network(
-                  'https://staging.ippu.org/storage/banners/${event['banner_name']}',
+                  'https://ippu.org/storage/banners/${event['banner_name']}',
                   height: size.height * 0.15,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
@@ -455,7 +455,7 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(15)),
                 child: Image.network(
-                  'https://staging.ippu.org/storage/banners/${cpd['banner']}',
+                  'https://ippu.org/storage/banners/${cpd['banner']}',
                   height: size.height * 0.15,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {

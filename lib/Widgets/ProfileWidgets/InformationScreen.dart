@@ -344,7 +344,7 @@ class _InformationScreenState extends State<InformationScreen> {
   Future<int> certificateCount() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
     final apiUrl =
-        'https://staging.ippu.org/api/attended-events/${userData?.id}';
+        'https://ippu.org/api/attended-events/${userData?.id}';
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
     };

@@ -57,7 +57,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
 
   String generateDeepLink() {
     // Generate the deep link
-    return "https://staging.ippu.org/myevents";
+    return "https://ippu.org/myevents";
   }
 
   Future<UserData> loadProfile() async {
@@ -614,7 +614,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
         context: context,
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
-        redirectUrl: 'https://staging.ippu.org/login',
+        redirectUrl: 'https://ippu.org/login',
         txRef: Uuid().v1(),
         amount: isMember() ? widget.member_rate : widget.normal_rate,
         customer: customer,
@@ -663,7 +663,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
     final userId = userData?.id; // Replace with your actual user ID
 
-    final apiUrl = Uri.parse('https://staging.ippu.org/api/cpds/attend');
+    final apiUrl = Uri.parse('https://ippu.org/api/cpds/attend');
 
     // Create a map of the data to send
     final Map<String, dynamic> requestBody = {

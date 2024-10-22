@@ -83,7 +83,7 @@ class _FirstDisplaySectionState extends State<FirstDisplaySection>
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/cpds/${userData?.id}';
+    final apiUrl = 'https://ippu.org/api/cpds/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -368,7 +368,7 @@ class _FirstDisplaySectionState extends State<FirstDisplaySection>
         context: context,
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
-        redirectUrl: 'https://staging.ippu.org/login',
+        redirectUrl: 'https://ippu.org/login',
         txRef: const Uuid().v1(),
         amount: membershipAmount,
         customer: customer,

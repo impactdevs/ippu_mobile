@@ -19,7 +19,7 @@ class _DropDownWidgetState extends State<DropDownWidget> {
   }
 
   Future<void> _fetchAccountTypes() async {
-    final response = await http.get(Uri.parse('https://staging.ippu.org/api/account-types'));
+    final response = await http.get(Uri.parse('https://ippu.org/api/account-types'));
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);

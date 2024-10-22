@@ -57,7 +57,7 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/events/${userData?.id}';
+    final apiUrl = 'https://ippu.org/api/events/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -261,7 +261,7 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                                   endDate: endData,
                                   member_rate: item.member_rate,
                                   imagelink:
-                                      'https://staging.ippu.org/storage/banners/$imageLink',
+                                      'https://ippu.org/storage/banners/$imageLink',
                                   eventName: eventName,
                                 );
                               }),
@@ -288,7 +288,7 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                                     top: Radius.circular(15),
                                   ),
                                   child: Image.network(
-                                    'https://staging.ippu.org/storage/banners/$imageLink',
+                                    'https://ippu.org/storage/banners/$imageLink',
                                     height: size.height * 0.2,
                                     width: double.infinity,
                                     fit: BoxFit.cover,

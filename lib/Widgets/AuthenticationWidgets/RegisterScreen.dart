@@ -44,7 +44,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<List<Map<String, dynamic>>> _fetchAccountTypes() async {
     try {
       final response = await http
-          .get(Uri.parse('https://staging.ippu.org/api/account-types'));
+          .get(Uri.parse('https://ippu.org/api/account-types'));
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         if (jsonData['data'] is List && (jsonData['data'] as List).isNotEmpty) {

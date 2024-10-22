@@ -109,7 +109,7 @@ class _attendedCpdListBuilderState extends State<attendedCpdListBuilder> {
                             top: Radius.circular(15),
                           ),
                           child: Image.network(
-                            "https://staging.ippu.org/storage/banners/${data.banner}",
+                            "https://ippu.org/storage/banners/${data.banner}",
                             height: size.height * 0.22,
                             width: double.infinity,
                             fit: BoxFit.cover,
@@ -198,7 +198,7 @@ class _attendedCpdListBuilderState extends State<attendedCpdListBuilder> {
                                         type: data.type,
                                         location: data.location,
                                         imagelink:
-                                            'https://staging.ippu.org/storage/banners/${data.banner}',
+                                            'https://ippu.org/storage/banners/${data.banner}',
                                         cpdsname: data.topic,
                                         status: data.attendance_status,
                                       );

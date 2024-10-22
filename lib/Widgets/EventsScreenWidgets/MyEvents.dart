@@ -29,7 +29,7 @@ class _MyEventsState extends State<MyEvents> {
 
     // Define the URL with userData.id
     final apiUrl =
-        'https://staging.ippu.org/api/attended-events/${userData?.id}';
+        'https://ippu.org/api/attended-events/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -117,7 +117,7 @@ class _MyEventsState extends State<MyEvents> {
                                     topRight: Radius.circular(15),
                                   ),
                                   child: Image.network(
-                                    "https://staging.ippu.org/storage/banners/${data.banner_name}",
+                                    "https://ippu.org/storage/banners/${data.banner_name}",
                                     height: size.height * 0.22,
                                     width: double.infinity,
                                     fit: BoxFit.cover,

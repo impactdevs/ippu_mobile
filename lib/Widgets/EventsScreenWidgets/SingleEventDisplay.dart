@@ -47,7 +47,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
   String attendance_status = "";
 
   String generateDeepLink() {
-    return "https://staging.ippu.org/myevents";
+    return "https://ippu.org/myevents";
   }
 
   Future<UserData> loadProfile() async {
@@ -528,7 +528,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
         context: context,
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
-        redirectUrl: 'https://staging.ippu.org/login',
+        redirectUrl: 'https://ippu.org/login',
         txRef: const Uuid().v1(),
         amount: isMember() ? widget.member_rate : widget.normal_rate,
         customer: customer,
@@ -576,7 +576,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
     final userId = userData?.id; // Replace with your actual user ID
 
-    final apiUrl = Uri.parse('https://staging.ippu.org/api/attend-event');
+    final apiUrl = Uri.parse('https://ippu.org/api/attend-event');
 
     // Create a map of the data to send
     final Map<String, dynamic> requestBody = {

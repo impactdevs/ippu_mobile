@@ -68,7 +68,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/events/${userData?.id}';
+    final apiUrl = 'https://ippu.org/api/events/${userData?.id}';
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
@@ -94,7 +94,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               startDate: event['start_date'],
               endDate: event['end_date'],
               imageLink:
-                  "https://staging.ippu.org/storage/banners/${event['banner_name']}",
+                  "https://ippu.org/storage/banners/${event['banner_name']}",
               points: event['points'].toString());
 
           for (var date in daysInRange(startDate, endDate)) {
@@ -119,7 +119,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Future<LinkedHashMap<DateTime, List<Event>>> fetchCpdssAndUpdateMap() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    final url = 'https://staging.ippu.org/api/cpds/${userData?.id}';
+    final url = 'https://ippu.org/api/cpds/${userData?.id}';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -145,7 +145,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               startDate: event['start_date'],
               endDate: event['end_date'],
               imageLink:
-                  "https://staging.ippu.org/storage/banners/${event['banner']}",
+                  "https://ippu.org/storage/banners/${event['banner']}",
               points: event['points'],
               type: event['type'],
               location: event['location'],

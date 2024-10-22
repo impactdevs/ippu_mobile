@@ -71,7 +71,7 @@ class _AttendedEventSIngleDisplayScreenState
                       ),
                       image: DecorationImage(
                           image: NetworkImage(
-                              "https://staging.ippu.org/storage/banners/${widget.imageLink}"))),
+                              "https://ippu.org/storage/banners/${widget.imageLink}"))),
                 ),
               ),
               Padding(

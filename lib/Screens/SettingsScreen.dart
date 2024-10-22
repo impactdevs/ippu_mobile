@@ -21,7 +21,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _deleteAccount(int userId) async {
     //send  DELETE requet to the server for the account id
     final response = await http.delete(
-      Uri.parse('https://staging.ippu.org/api/profile/remove/$userId'),
+      Uri.parse('https://ippu.org/api/profile/remove/$userId'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

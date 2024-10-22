@@ -253,7 +253,7 @@ class _ContainerDisplayingCommunicationsState
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/communications/${userData?.id}';
+    final apiUrl = 'https://ippu.org/api/communications/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -286,7 +286,7 @@ class _ContainerDisplayingCommunicationsState
 
   Future<void> markAsRead(String messageId) async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    const apiUrl = 'https://staging.ippu.org/api/mark-as-read';
+    const apiUrl = 'https://ippu.org/api/mark-as-read';
 
     // Define the headers with the bearer token
     final headers = {

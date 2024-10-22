@@ -59,7 +59,7 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
     required String field,
     required int id,
   }) async {
-    const String apiUrl = 'https://staging.ippu.org/api/education-background';
+    const String apiUrl = 'https://ippu.org/api/education-background';
 
     final Map<String, dynamic> requestData = {
       "title": title,
@@ -100,7 +100,7 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
     required int id,
     required String education_background_id,
   }) async {
-    const String apiUrl = 'https://staging.ippu.org/api/edit-education-background';
+    const String apiUrl = 'https://ippu.org/api/edit-education-background';
 
     final Map<String, dynamic> requestData = {
       "title": title,
@@ -453,7 +453,7 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/education-background/${userData?.id}';
+    final apiUrl = 'https://ippu.org/api/education-background/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {

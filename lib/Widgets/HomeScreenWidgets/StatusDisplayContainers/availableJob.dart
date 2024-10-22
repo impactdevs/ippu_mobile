@@ -32,7 +32,7 @@ class _availableJobState extends State<availableJob> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    const apiUrl = 'https://staging.ippu.org/api/jobs';
+    const apiUrl = 'https://ippu.org/api/jobs';
 
     // Define the headers with the bearer token
     final headers = {

@@ -31,7 +31,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
   Future<List<JobData>> fetchJobData() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    const apiUrl = 'https://staging.ippu.org/api/jobs';
+    const apiUrl = 'https://ippu.org/api/jobs';
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
     };

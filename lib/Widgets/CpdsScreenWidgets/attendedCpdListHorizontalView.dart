@@ -31,7 +31,7 @@ class _attendedCpdListHorizontalViewState extends State<attendedCpdListHorizonta
   final userData = Provider.of<UserProvider>(context, listen: false).user;
 
   // Define the URL with userData.id
-  final apiUrl = 'https://staging.ippu.org/api/upcoming-cpds/${userData?.id}';
+  final apiUrl = 'https://ippu.org/api/upcoming-cpds/${userData?.id}';
 
   // Define the headers with the bearer token
   final headers = {
@@ -210,7 +210,7 @@ class _attendedCpdListHorizontalViewState extends State<attendedCpdListHorizonta
                                     type: type,
                                     cpdId:cpdId.toString(),
                                     attendees: points,
-                                    imagelink: 'https://staging.ippu.org/storage/banners/$imageLink',
+                                    imagelink: 'https://ippu.org/storage/banners/$imageLink',
                                     cpdsname: activityName,
                                     normal_rate: normal_rate,
                                     member_rate: member_rate,
@@ -256,7 +256,7 @@ class _attendedCpdListHorizontalViewState extends State<attendedCpdListHorizonta
                                     color: Colors.grey.withOpacity(0.5)
                                   ),
                                   image: DecorationImage(
-                                    image: NetworkImage('https://staging.ippu.org/storage/banners/$imageLink'),
+                                    image: NetworkImage('https://ippu.org/storage/banners/$imageLink'),
                                   ),
                                 ),
                               ),

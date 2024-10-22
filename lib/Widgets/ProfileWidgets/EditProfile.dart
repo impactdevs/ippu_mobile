@@ -87,7 +87,7 @@ class _EditProfileState extends State<EditProfile> {
 
   Future<List<Map<String, dynamic>>> _fetchAccountTypes() async {
     final response =
-        await http.get(Uri.parse('https://staging.ippu.org/api/account-types'));
+        await http.get(Uri.parse('https://ippu.org/api/account-types'));
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
@@ -664,7 +664,7 @@ class _EditProfileState extends State<EditProfile> {
     UserData? userData = Provider.of<UserProvider>(context, listen: false).user;
     final userId = userData?.id; // Replace with your actual user ID
 
-    final apiUrl = Uri.parse('https://staging.ippu.org/api/profile/$userId');
+    final apiUrl = Uri.parse('https://ippu.org/api/profile/$userId');
 
     // Create a map of the data to send
     final userDataMap = {

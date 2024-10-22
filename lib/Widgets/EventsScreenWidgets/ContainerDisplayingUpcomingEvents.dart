@@ -42,7 +42,7 @@ class _ContainerDisplayingUpcomingEventsState
 
     // Define the URL with userData.id
     final apiUrl =
-        'https://staging.ippu.org/api/upcoming-events/${userData?.id}';
+        'https://ippu.org/api/upcoming-events/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -163,7 +163,7 @@ class _ContainerDisplayingUpcomingEventsState
                                     startDate: extractDate(startDate),
                                     endDate: extractDate(endData),
                                     imagelink:
-                                        'https://staging.ippu.org/storage/banners/$imageLink',
+                                        'https://ippu.org/storage/banners/$imageLink',
                                     eventName: eventName,
                                   );
                                 }),
@@ -186,7 +186,7 @@ class _ContainerDisplayingUpcomingEventsState
                                       top: Radius.circular(15),
                                     ),
                                     child: Image.network(
-                                      'https://staging.ippu.org/storage/banners/$imageLink',
+                                      'https://ippu.org/storage/banners/$imageLink',
                                       height: size.height * 0.2,
                                       width: double.infinity,
                                       fit: BoxFit.cover,

@@ -63,7 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<List<JobData>> fetchJobData() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    const apiUrl = 'https://staging.ippu.org/api/jobs';
+    const apiUrl = 'https://ippu.org/api/jobs';
 
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
@@ -472,7 +472,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 member_rate:
                                                     latestItem['member_rate'],
                                                 imagelink:
-                                                    'https://staging.ippu.org/storage/banners/${latestItem['banner_name']}',
+                                                    'https://ippu.org/storage/banners/${latestItem['banner_name']}',
                                                 eventName: latestItem['name'],
                                               );
                                             }),
@@ -502,7 +502,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 attendees: latestItem['points']
                                                     .toString(),
                                                 imagelink:
-                                                    'https://staging.ippu.org/storage/banners/${latestItem['banner']}',
+                                                    'https://ippu.org/storage/banners/${latestItem['banner']}',
                                                 cpdsname: latestItem['topic'],
                                                 normal_rate:
                                                     latestItem['normal_rate'],
@@ -713,7 +713,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(15)),
                           child: Image.network(
-                            'https://staging.ippu.org/storage/banners/${cpd['banner']}',
+                            'https://ippu.org/storage/banners/${cpd['banner']}',
                             height: size.height * 0.10,
                             width: double.infinity,
                             fit: BoxFit.cover,
@@ -1171,7 +1171,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         context: context,
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
-        redirectUrl: 'https://staging.ippu.org/login',
+        redirectUrl: 'https://ippu.org/login',
         txRef: const Uuid().v1(),
         amount: membershipAmount,
         customer: customer,

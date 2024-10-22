@@ -112,7 +112,7 @@ class UpcomingEventsWidget extends StatelessWidget {
         ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
           child: Image.network(
-            'https://staging.ippu.org/storage/banners/${event['banner_name']}',
+            'https://ippu.org/storage/banners/${event['banner_name']}',
             height: size.height * 0.12,
             width: double.infinity,
             fit: BoxFit.cover,

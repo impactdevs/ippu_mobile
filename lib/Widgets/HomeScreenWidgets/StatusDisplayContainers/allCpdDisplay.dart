@@ -40,7 +40,7 @@ class _allCpdDisplayState extends State<allCpdDisplay> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/cpds/${userData?.id}';
+    final apiUrl = 'https://ippu.org/api/cpds/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {

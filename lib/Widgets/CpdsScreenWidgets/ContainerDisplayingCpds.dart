@@ -56,7 +56,7 @@ class _ContainerDisplayingCpdsState extends State<ContainerDisplayingCpds>
 
   Future<List<CpdModel>> fetchAllCpds() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    final apiUrl = 'https://staging.ippu.org/api/cpds/${userData?.id}';
+    final apiUrl = 'https://ippu.org/api/cpds/${userData?.id}';
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
     };
@@ -219,7 +219,7 @@ class _ContainerDisplayingCpdsState extends State<ContainerDisplayingCpds>
                                     cpdId: item.id.toString(),
                                     attendees: item.points,
                                     imagelink:
-                                        'https://staging.ippu.org/storage/banners/${item.banner}',
+                                        'https://ippu.org/storage/banners/${item.banner}',
                                     cpdsname: activityName,
                                     normal_rate: item.normalRate,
                                     member_rate: item.membersRate,
@@ -250,7 +250,7 @@ class _ContainerDisplayingCpdsState extends State<ContainerDisplayingCpds>
                                       top: Radius.circular(15),
                                     ),
                                     child: Image.network(
-                                      'https://staging.ippu.org/storage/banners/${item.banner}',
+                                      'https://ippu.org/storage/banners/${item.banner}',
                                       height: size.height * 0.2,
                                       width: double.infinity,
                                       fit: BoxFit.cover,
