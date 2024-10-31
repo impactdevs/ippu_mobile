@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/EventsScreenWidgets/SingleEventDisplay.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/AllEventsModel.dart';
@@ -24,6 +25,9 @@ class _ContainerDisplayingUpcomingEventsState
   final ScrollController _scrollController = ScrollController();
   final String _searchQuery = '';
 
+  final baseUrl = AppEndpoints.baseUrl;
+  final baseImageUrl = AppEndpoints.baseImageUrl;
+
   late Future<List<AllEventsModel>> eventDataFuture;
   @override
   void initState() {
@@ -41,8 +45,7 @@ class _ContainerDisplayingUpcomingEventsState
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl =
-        'https://staging.ippu.org/api/upcoming-events/${userData?.id}';
+    final apiUrl = '$baseUrl/upcoming-events/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -163,7 +166,7 @@ class _ContainerDisplayingUpcomingEventsState
                                     startDate: extractDate(startDate),
                                     endDate: extractDate(endData),
                                     imagelink:
-                                        'https://staging.ippu.org/storage/banners/$imageLink',
+                                        '$baseImageUrl/banners/$imageLink',
                                     eventName: eventName,
                                   );
                                 }),
@@ -186,7 +189,7 @@ class _ContainerDisplayingUpcomingEventsState
                                       top: Radius.circular(15),
                                     ),
                                     child: Image.network(
-                                      'https://staging.ippu.org/storage/banners/$imageLink',
+                                      '$baseImageUrl/banners/$imageLink',
                                       height: size.height * 0.2,
                                       width: double.infinity,
                                       fit: BoxFit.cover,

@@ -14,6 +14,7 @@ import 'package:ippu/Screens/CpdsScreen.dart';
 import 'package:ippu/Screens/EventsScreen.dart';
 import 'package:ippu/Screens/JobsScreen.dart';
 import 'package:ippu/Screens/ProfileScreen.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/CommunicationScreenWidgets/SingleCommunicationDisplayScreen.dart';
 import 'package:ippu/Widgets/CpdsScreenWidgets/CpdsSingleEventDisplay.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
@@ -50,6 +51,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isLoading = true;
   final formatter = NumberFormat('#,##0');
   Map<String, dynamic> latestComm = {};
+  final baseUrl = AppEndpoints.baseUrl;
+  final baseImageUrl = AppEndpoints.baseImageUrl;
 
   @override
   void initState() {
@@ -63,7 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<List<JobData>> fetchJobData() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    const apiUrl = 'https://staging.ippu.org/api/jobs';
+    final apiUrl = '$baseUrl/jobs';
 
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
@@ -472,7 +475,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 member_rate:
                                                     latestItem['member_rate'],
                                                 imagelink:
-                                                    'https://staging.ippu.org/storage/banners/${latestItem['banner_name']}',
+                                                    '$baseImageUrl/banners/${latestItem['banner_name']}',
                                                 eventName: latestItem['name'],
                                               );
                                             }),
@@ -502,7 +505,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 attendees: latestItem['points']
                                                     .toString(),
                                                 imagelink:
-                                                    'https://staging.ippu.org/storage/banners/${latestItem['banner']}',
+                                                    '$baseImageUrl/banners/${latestItem['banner']}',
                                                 cpdsname: latestItem['topic'],
                                                 normal_rate:
                                                     latestItem['normal_rate'],
@@ -713,7 +716,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(15)),
                           child: Image.network(
-                            'https://staging.ippu.org/storage/banners/${cpd['banner']}',
+                            '$baseImageUrl/banners/${cpd['banner']}',
                             height: size.height * 0.10,
                             width: double.infinity,
                             fit: BoxFit.cover,
@@ -1171,7 +1174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         context: context,
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
-        redirectUrl: 'https://staging.ippu.org/login',
+        redirectUrl: AppEndpoints.flutterWaveRedirect,
         txRef: const Uuid().v1(),
         amount: membershipAmount,
         customer: customer,

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/AuthenticationWidgets/LoginScreen.dart';
 import 'package:ippu/Widgets/AuthenticationWidgets/RegistrationFeedback.dart';
 import 'package:ippu/controllers/auth_controller.dart';
@@ -44,7 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<List<Map<String, dynamic>>> _fetchAccountTypes() async {
     try {
       final response = await http
-          .get(Uri.parse('https://staging.ippu.org/api/account-types'));
+          .get(Uri.parse('${AppEndpoints.baseUrl}/api/account-types'));
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         if (jsonData['data'] is List && (jsonData['data'] as List).isNotEmpty) {

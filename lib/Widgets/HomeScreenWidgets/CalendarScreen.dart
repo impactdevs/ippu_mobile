@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:ippu/Screens/animated_text.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Util/util.dart';
 import 'package:ippu/Widgets/CpdsScreenWidgets/CpdsSingleEventDisplay.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
@@ -28,6 +29,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   DateTime? _selectedDay;
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
+
+  final baseUrl = AppEndpoints.baseUrl;
+  final baseImageUrl = AppEndpoints.baseImageUrl;
 
   late Future<LinkedHashMap<DateTime, List<Event>>> dayEvents;
   LinkedHashMap<DateTime, List<Event>> eventsList = LinkedHashMap();
@@ -68,7 +72,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/events/${userData?.id}';
+    final apiUrl = '$baseUrl/events/${userData?.id}';
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
@@ -93,8 +97,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               description: event['details'],
               startDate: event['start_date'],
               endDate: event['end_date'],
-              imageLink:
-                  "https://staging.ippu.org/storage/banners/${event['banner_name']}",
+              imageLink: "$baseImageUrl/banners/${event['banner_name']}",
               points: event['points'].toString());
 
           for (var date in daysInRange(startDate, endDate)) {
@@ -119,7 +122,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Future<LinkedHashMap<DateTime, List<Event>>> fetchCpdssAndUpdateMap() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    final url = 'https://staging.ippu.org/api/cpds/${userData?.id}';
+    final url = '$baseUrl/cpds/${userData?.id}';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -144,8 +147,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               description: event['content'],
               startDate: event['start_date'],
               endDate: event['end_date'],
-              imageLink:
-                  "https://staging.ippu.org/storage/banners/${event['banner']}",
+              imageLink: "$baseImageUrl/banners/${event['banner']}",
               points: event['points'],
               type: event['type'],
               location: event['location'],

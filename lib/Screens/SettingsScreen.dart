@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:clean_dialog/clean_dialog.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/AuthenticationWidgets/LoginScreen.dart';
 import 'package:ippu/models/UserProvider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -21,7 +22,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _deleteAccount(int userId) async {
     //send  DELETE requet to the server for the account id
     final response = await http.delete(
-      Uri.parse('https://staging.ippu.org/api/profile/remove/$userId'),
+      Uri.parse('${AppEndpoints.baseUrl}/profile/remove/$userId'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -101,100 +102,96 @@ class _SettingsScreenState extends State<SettingsScreen> {
             appBar: AppBar(
               elevation: 0,
               backgroundColor: const Color.fromARGB(255, 42, 129, 201),
-              title: Text("Account Settings", style: GoogleFonts.lato(color: Colors.white)),
+              title: Text("Account Settings",
+                  style: GoogleFonts.lato(color: Colors.white)),
             ),
             body: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.red,
-                    width: 1,
-                  ),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.red,
+                  width: 1,
                 ),
-                child: Column(
+              ),
+              child: Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text("ACCOUNT SETTINGS",
+                        style: TextStyle(color: Colors.red, fontSize: 20)),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      "Note: Deleting your Account will lead to loss of your data from our system, thus you will lose access to the application",
+                      style: TextStyle(color: Colors.blue, fontSize: 16),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Padding(
                         padding: EdgeInsets.all(8.0),
-                        child: Text("ACCOUNT SETTINGS",
+                        child: Text("DANGER ZONE",
                             style: TextStyle(color: Colors.red, fontSize: 20)),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text(
-                          "Note: Deleting your Account will lead to loss of your data from our system, thus you will lose access to the application",
-                          style: TextStyle(color: Colors.blue, fontSize: 16),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor:
+                                MaterialStateProperty.all(Colors.red),
+                          ),
+                          onPressed: () {
+                            final userData = Provider.of<UserProvider>(context,
+                                    listen: false)
+                                .user;
+                            final userId = userData
+                                ?.id; // Call the function to delete the account
+                            _showDialog(
+                                userId!,
+                                "Delete Account",
+                                "Are you sure you want to delete your account?",
+                                true);
+                          },
+                          child: const Text(
+                            'DELETE ACCOUNT',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child:Text("DANGER ZONE",
-                                  style: TextStyle(
-                                      color: Colors.red, fontSize: 20)),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: ElevatedButton(
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    MaterialStateProperty.all(Colors.red),
-                              ),
-                              onPressed: () {
-                                final userData = Provider.of<UserProvider>(
-                                        context,
-                                        listen: false)
-                                    .user;
-                                final userId = userData
-                                    ?.id; // Call the function to delete the account
-                                _showDialog(
-                                    userId!,
-                                    "Delete Account",
-                                    "Are you sure you want to delete your account?",
-                                    true);
-                              },
-                              child:const Text(
-                                'DELETE ACCOUNT',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child:Text("NOTIFICATIONS",
-                                  style: TextStyle(
-                                      color: Colors.blue, fontSize: 20)),
-                            ),
-                          
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 10),
-                                Switch(
-                                  value:
-                                      isNotificationOn, // Set this variable based on the user's preference
-                                  onChanged: (value) async {
-                                    bool status =
-                                        await turnNotificationsOnOrOff();
-                                    setState(() {
-                                      isNotificationOn = status;
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
-                ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text("NOTIFICATIONS",
+                            style: TextStyle(color: Colors.blue, fontSize: 20)),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 10),
+                            Switch(
+                              value:
+                                  isNotificationOn, // Set this variable based on the user's preference
+                              onChanged: (value) async {
+                                bool status = await turnNotificationsOnOrOff();
+                                setState(() {
+                                  isNotificationOn = status;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           );
         } else if (snapshot.hasError) {
           return const Center(

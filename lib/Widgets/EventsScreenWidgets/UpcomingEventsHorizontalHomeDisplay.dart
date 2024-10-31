@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ippu/Screens/EventsScreen.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/EventsScreenWidgets/SingleEventDisplay.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/AllEventsModel.dart';
@@ -24,6 +25,9 @@ class _UpcomingEventsHorizontalHomeDisplayState
 
   final ScrollController _scrollController = ScrollController();
   final String _searchQuery = '';
+
+  final baseUrl = AppEndpoints.baseUrl;
+  final baseImageUrl = AppEndpoints.baseImageUrl;
 
   void _scrollToTop() {
     _scrollController.animateTo(0,
@@ -47,8 +51,7 @@ class _UpcomingEventsHorizontalHomeDisplayState
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl =
-        'https://staging.ippu.org/api/upcoming-events/${userData?.id}';
+    final apiUrl = '$baseUrl/upcoming-events/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -287,8 +290,7 @@ class _UpcomingEventsHorizontalHomeDisplayState
                             description: description,
                             startDate: extractDate(startDate),
                             endDate: extractDate(endData),
-                            imagelink:
-                                'https://staging.ippu.org/storage/banners/$imageLink',
+                            imagelink: '$baseImageUrl/banners/$imageLink',
                             eventName: eventName,
                           );
                         }),
@@ -337,7 +339,7 @@ class _UpcomingEventsHorizontalHomeDisplayState
                                       color: Colors.grey.withOpacity(0.5)),
                                   image: DecorationImage(
                                     image: NetworkImage(
-                                        'https://staging.ippu.org/storage/banners/$imageLink'),
+                                        '$baseImageUrl/banners/$imageLink'),
                                   ),
                                 ),
                               ),

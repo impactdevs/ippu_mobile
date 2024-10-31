@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/EventsScreenWidgets/AttendedEventSIngleDisplayScreen.dart';
 import 'package:ippu/models/MyAttendedEvents.dart';
 import 'package:ippu/models/UserProvider.dart';
@@ -17,6 +18,8 @@ class MyEvents extends StatefulWidget {
 
 class _MyEventsState extends State<MyEvents> {
   late Future<List<MyAttendedEvents>> eventDataFuture;
+  final baseUrl = AppEndpoints.baseUrl;
+  final baseImageUrl = AppEndpoints.baseImageUrl;
 
   @override
   void initState() {
@@ -28,8 +31,7 @@ class _MyEventsState extends State<MyEvents> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl =
-        'https://staging.ippu.org/api/attended-events/${userData?.id}';
+    final apiUrl = '$baseUrl/attended-events/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -117,7 +119,7 @@ class _MyEventsState extends State<MyEvents> {
                                     topRight: Radius.circular(15),
                                   ),
                                   child: Image.network(
-                                    "https://staging.ippu.org/storage/banners/${data.banner_name}",
+                                    "$baseImageUrl/banners/${data.banner_name}",
                                     height: size.height * 0.22,
                                     width: double.infinity,
                                     fit: BoxFit.cover,

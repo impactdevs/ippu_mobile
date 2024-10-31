@@ -1,5 +1,8 @@
 class AppEndpoints {
   static const String baseUrl = 'https://staging.ippu.org/api';
+  static const String baseImageUrl = 'https://staging.ippu.org/storage';
+  static const String flutterWaveRedirect = 'https://staging.ippu.org/login';
+  static const String deepLink = 'https://staging.ippu.org/myevents';
 
   static const String loginEndPoint = "/login";
   static const String regiserEndPoint = "/register";
@@ -18,14 +21,14 @@ class AppEndpoints {
   static const String educationBackgroundEndPoint = "/education-background";
   static const String upcomingCpdsEndPoint = "/upcoming-cpds";
   static const String upcomingEventsEndPoint = "/upcoming-events";
-  static const String myEventsEndPoint ="/attended-events/";
+  static const String myEventsEndPoint = "/attended-events/";
   static const String accountTypesEndPoint = "/account-types";
   static const String communicationsEndPoint = "/communications/{user_id}}";
-  static const String fcmToken ="/fcm-device-token";
-  static const String uploadProfilePicture ="/update-profile-photo";
+  static const String fcmToken = "/fcm-device-token";
+  static const String uploadProfilePicture = "/update-profile-photo";
   static const String userProfile = "/profile";
 
-  static const String myCpdsEndPoint ="/attended-cpds/";
+  static const String myCpdsEndPoint = "/attended-cpds/";
 
   static const String downloadEventCertificate = "/events/certificate/{event}";
   static const String downloadCpdCertificate = "/cpds/certificate/{cpd}";

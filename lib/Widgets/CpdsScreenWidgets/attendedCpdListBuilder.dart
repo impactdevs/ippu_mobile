@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/CpdsScreenWidgets/AttendedSingleCpdDisplay.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/AttendedCpdModel.dart';
@@ -21,6 +22,8 @@ class _attendedCpdListBuilderState extends State<attendedCpdListBuilder> {
     super.initState();
     CpdDataFuture = fetchCpdData();
   }
+
+  final baseImageUrl = AppEndpoints.baseImageUrl;
 
   Future<List<AttendedCpdModel>> fetchCpdData() async {
     AuthController authController = AuthController();
@@ -109,7 +112,7 @@ class _attendedCpdListBuilderState extends State<attendedCpdListBuilder> {
                             top: Radius.circular(15),
                           ),
                           child: Image.network(
-                            "https://staging.ippu.org/storage/banners/${data.banner}",
+                            "$baseImageUrl/banners/${data.banner}",
                             height: size.height * 0.22,
                             width: double.infinity,
                             fit: BoxFit.cover,
@@ -198,7 +201,7 @@ class _attendedCpdListBuilderState extends State<attendedCpdListBuilder> {
                                         type: data.type,
                                         location: data.location,
                                         imagelink:
-                                            'https://staging.ippu.org/storage/banners/${data.banner}',
+                                            '$baseImageUrl/banners/${data.banner}',
                                         cpdsname: data.topic,
                                         status: data.attendance_status,
                                       );

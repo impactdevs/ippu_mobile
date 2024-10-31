@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/models/UserProvider.dart';
 import 'package:ippu/models/WorkingExperience.dart';
 import 'package:provider/provider.dart';
@@ -39,6 +40,7 @@ class _WorkExperienceState extends State<WorkExperience> {
   final TextEditingController _description = TextEditingController();
   final TextEditingController _position = TextEditingController();
   int experience_id = 0;
+  final baseUrl = AppEndpoints.baseUrl;
 
   Future<void> addWorkExperience(
       {required String title,
@@ -47,7 +49,7 @@ class _WorkExperienceState extends State<WorkExperience> {
       required String description,
       required String position,
       required int id}) async {
-    const String apiUrl = 'https://staging.ippu.org/api/work-experience';
+    final String apiUrl = '$baseUrl/work-experience';
 
     final Map<String, dynamic> requestData = {
       "title": title,
@@ -64,7 +66,6 @@ class _WorkExperienceState extends State<WorkExperience> {
         'Content-Type': 'application/json',
       },
     );
-
 
     if (response.statusCode == 200) {
       // WorkExperience background added successfully
@@ -87,7 +88,7 @@ class _WorkExperienceState extends State<WorkExperience> {
       required String position,
       required int id,
       required String experience_id}) async {
-    const String apiUrl = 'https://staging.ippu.org/api/edit-work-experience';
+    final String apiUrl = '$baseUrl/edit-work-experience';
 
     final Map<String, dynamic> requestData = {
       "title": title,
@@ -105,7 +106,6 @@ class _WorkExperienceState extends State<WorkExperience> {
         'Content-Type': 'application/json',
       },
     );
-
 
     if (response.statusCode == 200) {
       // WorkExperience background added successfully
@@ -136,7 +136,8 @@ class _WorkExperienceState extends State<WorkExperience> {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 42, 129, 201),
         elevation: 0,
-        title: Text("Work Experience", style: GoogleFonts.lato(color: Colors.white)),
+        title: Text("Work Experience",
+            style: GoogleFonts.lato(color: Colors.white)),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color.fromARGB(255, 42, 129, 201),
@@ -242,7 +243,10 @@ class _WorkExperienceState extends State<WorkExperience> {
                                           _populateFormFields(
                                               experience); // Pass the index here
                                         },
-                                        child: const Icon(Icons.edit, color: Colors.white,), // Edit Icon
+                                        child: const Icon(
+                                          Icons.edit,
+                                          color: Colors.white,
+                                        ), // Edit Icon
                                       ),
                                     ],
                                   ),
@@ -453,7 +457,7 @@ class _WorkExperienceState extends State<WorkExperience> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
     final userId = userData?.id;
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/work-experience/$userId';
+    final apiUrl = '$baseUrl/work-experience/$userId';
 
     // Define the headers with the bearer token
     final headers = {

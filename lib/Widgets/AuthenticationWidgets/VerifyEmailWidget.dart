@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/AuthenticationWidgets/LoginScreen.dart';
 import 'package:http/http.dart' as http;
 
@@ -9,12 +10,14 @@ class VerificationCodeScreen extends StatefulWidget {
   const VerificationCodeScreen({super.key, required this.email});
 
   @override
-  _VerificationCodeScreenState createState() => _VerificationCodeScreenState();
+  State<VerificationCodeScreen> createState() => _VerificationCodeScreenState();
 }
 
 class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
   final TextEditingController _verificationCodeController =
       TextEditingController();
+
+  final baseUrl = AppEndpoints.baseUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -75,8 +78,7 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
                 // Implement logic to resend the verification code
                 final email = widget.email;
                 final response = await http.post(
-                    Uri.parse(
-                        'https://staging.ippu.org/api/profile/resend-verification-code'),
+                    Uri.parse('$baseUrl/profile/resend-verification-code'),
                     body: {'email': email});
                 if (response.statusCode == 200) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -96,7 +98,8 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
                 foregroundColor: MaterialStateProperty.all(Colors.white),
                 backgroundColor: MaterialStateProperty.all(Colors.blue),
               ),
-              child: const Text('Didn\'t get the code?Resend verification code'),
+              child:
+                  const Text('Didn\'t get the code?Resend verification code'),
             ),
 
             //go to login screen
@@ -130,8 +133,7 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
   Future<bool> verificationCodeIsValid(num verificationCode) async {
     final email = widget.email;
 
-    final response = await http.post(
-        Uri.parse('https://staging.ippu.org/api/profile/verify-email'),
+    final response = await http.post(Uri.parse('$baseUrl/profile/verify-email'),
         body: {'email': email, 'code': verificationCode.toString()});
     if (response.statusCode == 200) {
       return true;

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/models/UserProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:ippu/models/EducationData.dart';
@@ -26,7 +27,8 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
   //to control the visibility of the form
   bool _isFormVisible = false;
   late Future<List<EducationData>> eventDataFuture;
-  FormMode _formMode = FormMode.Add; // Default mode is adding
+  FormMode _formMode = FormMode.Add;
+  final baseUrl = AppEndpoints.baseUrl; // Default mode is adding
 
   @override
   void initState() {
@@ -59,7 +61,7 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
     required String field,
     required int id,
   }) async {
-    const String apiUrl = 'https://staging.ippu.org/api/education-background';
+    final String apiUrl = '$baseUrl/education-background';
 
     final Map<String, dynamic> requestData = {
       "title": title,
@@ -100,7 +102,7 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
     required int id,
     required String education_background_id,
   }) async {
-    const String apiUrl = 'https://staging.ippu.org/api/edit-education-background';
+    final String apiUrl = '$baseUrl/edit-education-background';
 
     final Map<String, dynamic> requestData = {
       "title": title,
@@ -121,7 +123,6 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
         'Content-Type': 'application/json',
       },
     );
-
 
     if (response.statusCode == 200) {
       // Education background added successfully
@@ -144,7 +145,10 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 42, 129, 201),
         elevation: 0,
-        title: Text("Education Background", style: GoogleFonts.lato(color: Colors.white,)),
+        title: Text("Education Background",
+            style: GoogleFonts.lato(
+              color: Colors.white,
+            )),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color.fromARGB(255, 42, 129, 201),
@@ -152,7 +156,10 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
           _toggleFormVisibility(FormMode.Add);
         },
         tooltip: 'Add Education',
-        child: const Icon(Icons.add, color: Colors.white,),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
       ),
       body: Column(
         children: [
@@ -257,9 +264,9 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
                                               fontSize: 16,
                                               color: Colors.white,
                                               fontWeight: FontWeight.bold)),
-                                              //let the icon be at the end right
+                                      //let the icon be at the end right
                                       const Spacer(),
-                                      
+
                                       GestureDetector(
                                         onTap: () {
                                           print(
@@ -269,7 +276,8 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
                                           _populateFormFields(
                                               experience); // Pass the index here
                                         },
-                                        child: const Icon(Icons.edit, color: Colors.white), // Edit Icon
+                                        child: const Icon(Icons.edit,
+                                            color: Colors.white), // Edit Icon
                                       ),
                                     ])
                                   ],
@@ -453,7 +461,7 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://staging.ippu.org/api/education-background/${userData?.id}';
+    final apiUrl = '$baseUrl/education-background/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -505,6 +513,5 @@ class _EducationBackgroundScreenState extends State<EducationBackgroundScreen> {
     _startDate.text = educationData.startDate;
     _endDate.text = educationData.endDate;
     education_background_id = int.parse(educationData.id);
-
   }
 }
