@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/AuthenticationWidgets/LoginScreen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isProcessing = false;
+  final baseUrl = AppEndpoints.baseUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -336,7 +338,7 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       setState(() => _isProcessing = true);
       try {
         final response = await http.post(
-          Uri.parse('https://ippu.org/api/profile/reset-password-code'),
+          Uri.parse('$baseUrl/profile/reset-password-code'),
           body: {'email': _emailController.text},
         );
 
@@ -390,8 +392,7 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<bool> _verificationCodeIsValid() async {
     final response = await http.post(
-      Uri.parse(
-          'https://ippu.org/api/profile/verify-password-reset-email'),
+      Uri.parse('$baseUrl/profile/verify-password-reset-email'),
       body: {
         'email': _emailController.text,
         'code': _verificationCodeController.text,
@@ -402,7 +403,7 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<bool> _performPasswordReset() async {
     final response = await http.post(
-      Uri.parse('https://ippu.org/api/profile/reset-password'),
+      Uri.parse('$baseUrl/profile/reset-password'),
       body: {
         'email': _emailController.text,
         'code': _verificationCodeController.text,

@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:ippu/Providers/ProfilePicProvider.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
 import 'package:ippu/Screens/EducationBackgroundScreen.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/UserData.dart';
 import 'package:ippu/models/UserProvider.dart';
@@ -343,8 +344,7 @@ class _InformationScreenState extends State<InformationScreen> {
 
   Future<int> certificateCount() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    final apiUrl =
-        'https://ippu.org/api/attended-events/${userData?.id}';
+    final apiUrl = '${AppEndpoints.baseUrl}/attended-events/${userData?.id}';
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
     };

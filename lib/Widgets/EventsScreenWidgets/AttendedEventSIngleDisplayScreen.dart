@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path_provider/path_provider.dart';
@@ -71,7 +72,7 @@ class _AttendedEventSIngleDisplayScreenState
                       ),
                       image: DecorationImage(
                           image: NetworkImage(
-                              "https://ippu.org/storage/banners/${widget.imageLink}"))),
+                              "${AppEndpoints.baseImageUrl}/banners/${widget.imageLink}"))),
                 ),
               ),
               Padding(

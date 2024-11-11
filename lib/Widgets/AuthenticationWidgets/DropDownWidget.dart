@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:ippu/Util/app_endpoints.dart';
 
 class DropDownWidget extends StatefulWidget {
   const DropDownWidget({super.key});
@@ -8,8 +9,11 @@ class DropDownWidget extends StatefulWidget {
   @override
   _DropDownWidgetState createState() => _DropDownWidgetState();
 }
+
 class _DropDownWidgetState extends State<DropDownWidget> {
-  final Map<String, String> _accountTypeMap = {'Please select account type': '0'};
+  final Map<String, String> _accountTypeMap = {
+    'Please select account type': '0'
+  };
   String _selectedValue = 'Please select account type';
 
   @override
@@ -19,7 +23,8 @@ class _DropDownWidgetState extends State<DropDownWidget> {
   }
 
   Future<void> _fetchAccountTypes() async {
-    final response = await http.get(Uri.parse('https://ippu.org/api/account-types'));
+    final response =
+        await http.get(Uri.parse('${AppEndpoints.baseUrl}/account-types'));
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);

@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/EventsScreenWidgets/SingleEventDisplay.dart';
 import 'package:ippu/models/AllEventsModel.dart';
 import 'package:ippu/models/UserProvider.dart';
@@ -57,7 +58,7 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://ippu.org/api/events/${userData?.id}';
+    final apiUrl = '${AppEndpoints.baseUrl}/events/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -261,7 +262,7 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                                   endDate: endData,
                                   member_rate: item.member_rate,
                                   imagelink:
-                                      'https://ippu.org/storage/banners/$imageLink',
+                                      '${AppEndpoints.baseImageUrl}/banners/$imageLink',
                                   eventName: eventName,
                                 );
                               }),
@@ -288,7 +289,7 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                                     top: Radius.circular(15),
                                   ),
                                   child: Image.network(
-                                    'https://ippu.org/storage/banners/$imageLink',
+                                    '${AppEndpoints.baseImageUrl}/banners/$imageLink',
                                     height: size.height * 0.2,
                                     width: double.infinity,
                                     fit: BoxFit.cover,

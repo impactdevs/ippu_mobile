@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 
 class UpcomingEventsWidget extends StatelessWidget {
   final List<dynamic> upcomingEvents;
@@ -112,7 +113,7 @@ class UpcomingEventsWidget extends StatelessWidget {
         ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
           child: Image.network(
-            'https://ippu.org/storage/banners/${event['banner_name']}',
+            '${AppEndpoints.baseImageUrl}/banners/${event['banner_name']}',
             height: size.height * 0.12,
             width: double.infinity,
             fit: BoxFit.cover,

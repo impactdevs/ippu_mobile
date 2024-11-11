@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/JobScreenWidgets/SIngleJobDetailDisplay.dart';
 import 'package:ippu/models/JobData.dart';
 import 'package:ippu/models/UserProvider.dart';
@@ -31,7 +32,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
   Future<List<JobData>> fetchJobData() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    const apiUrl = 'https://ippu.org/api/jobs';
+    const apiUrl = '${AppEndpoints.baseUrl}/jobs';
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
     };

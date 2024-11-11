@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:ippu/Screens/CpdsScreen.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/models/CpdModel.dart';
 import 'package:ippu/models/UserProvider.dart';
 import 'package:provider/provider.dart';
@@ -40,7 +41,7 @@ class _allCpdDisplayState extends State<allCpdDisplay> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://ippu.org/api/cpds/${userData?.id}';
+    final apiUrl = '${AppEndpoints.baseUrl}/cpds/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {

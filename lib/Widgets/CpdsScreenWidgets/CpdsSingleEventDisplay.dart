@@ -7,6 +7,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutterwave_standard/flutterwave.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/UserData.dart';
 import 'package:ippu/models/UserProvider.dart';
@@ -54,10 +55,11 @@ class CpdsSingleEventDisplay extends StatefulWidget {
 
 class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
   String attendance_status = "";
+  final baseUrl = AppEndpoints.baseUrl;
 
   String generateDeepLink() {
     // Generate the deep link
-    return "https://ippu.org/myevents";
+    return AppEndpoints.deepLink;
   }
 
   Future<UserData> loadProfile() async {
@@ -614,7 +616,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
         context: context,
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
-        redirectUrl: 'https://ippu.org/login',
+        redirectUrl: AppEndpoints.flutterWaveRedirect,
         txRef: Uuid().v1(),
         amount: isMember() ? widget.member_rate : widget.normal_rate,
         customer: customer,
@@ -663,7 +665,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
     final userId = userData?.id; // Replace with your actual user ID
 
-    final apiUrl = Uri.parse('https://ippu.org/api/cpds/attend');
+    final apiUrl = Uri.parse('$baseUrl/cpds/attend');
 
     // Create a map of the data to send
     final Map<String, dynamic> requestBody = {

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
 import 'package:ippu/Screens/ProfileScreen.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/FirstSetOfRows.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/StatDisplayRow.dart';
 import 'package:ippu/Widgets/HomeScreenWidgets/StatusDisplayContainers/allCommunication.dart';
@@ -83,7 +84,7 @@ class _FirstDisplaySectionState extends State<FirstDisplaySection>
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://ippu.org/api/cpds/${userData?.id}';
+    final apiUrl = '${AppEndpoints.baseUrl}/cpds/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -368,7 +369,7 @@ class _FirstDisplaySectionState extends State<FirstDisplaySection>
         context: context,
         publicKey: env.Env.FLW_PUBLIC_KEY,
         currency: "UGX",
-        redirectUrl: 'https://ippu.org/login',
+        redirectUrl: AppEndpoints.flutterWaveRedirect,
         txRef: const Uuid().v1(),
         amount: membershipAmount,
         customer: customer,

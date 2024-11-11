@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/CpdsScreenWidgets/CpdsSingleEventDisplay.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
@@ -26,6 +27,8 @@ class _ContainerDisplayingUpcomingCpdsState
   }
 
   bool _showBackToTopButton = false;
+  final baseUrl = AppEndpoints.baseUrl;
+  final baseImageUrl = AppEndpoints.baseImageUrl;
 
   late Future<List<CpdModel>> cpdDataFuture;
   @override
@@ -56,7 +59,7 @@ class _ContainerDisplayingUpcomingCpdsState
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://ippu.org/api/upcoming-cpds/${userData?.id}';
+    final apiUrl = '$baseUrl/upcoming-cpds/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -198,7 +201,7 @@ class _ContainerDisplayingUpcomingCpdsState
                                     cpdId: cpdId.toString(),
                                     attendees: points,
                                     imagelink:
-                                        'https://ippu.org/storage/banners/$imageLink',
+                                        '$baseImageUrl/banners/$imageLink',
                                     cpdsname: activityName,
                                     normal_rate: normal_rate,
                                     member_rate: member_rate,
@@ -224,7 +227,7 @@ class _ContainerDisplayingUpcomingCpdsState
                                       top: Radius.circular(15),
                                     ),
                                     child: Image.network(
-                                      'https://ippu.org/storage/banners/$imageLink',
+                                      '$baseImageUrl/banners/$imageLink',
                                       height: size.height * 0.2,
                                       width: double.infinity,
                                       fit: BoxFit.cover,

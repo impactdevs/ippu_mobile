@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/CommunicationScreenWidgets/SingleCommunicationDisplayScreen.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/CommunicationModel.dart';
@@ -24,6 +25,7 @@ class _ContainerDisplayingCommunicationsState
   int maxWords = 40;
   int unreadCount = 0;
   int readCount = 0;
+  final baseUrl = AppEndpoints.baseUrl;
 
   final ScrollController _scrollController = ScrollController();
   AuthController authController = AuthController();
@@ -82,8 +84,7 @@ class _ContainerDisplayingCommunicationsState
               itemBuilder: (context, index) {
                 final item = data[index];
                 return InkWell(
-                  onTap: () {
-                  },
+                  onTap: () {},
                   child: InkWell(
                     onTap: () {
                       // Mark the communication as read
@@ -132,7 +133,8 @@ class _ContainerDisplayingCommunicationsState
                                     fontSize: size.height * 0.02,
                                     fontWeight: FontWeight.bold,
                                     fontStyle: FontStyle.normal,
-                                    color: const Color.fromARGB(255, 7, 63, 109),
+                                    color:
+                                        const Color.fromARGB(255, 7, 63, 109),
                                   ),
                                 ),
                               ),
@@ -253,7 +255,7 @@ class _ContainerDisplayingCommunicationsState
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    final apiUrl = 'https://ippu.org/api/communications/${userData?.id}';
+    final apiUrl = '$baseUrl/communications/${userData?.id}';
 
     // Define the headers with the bearer token
     final headers = {
@@ -286,7 +288,7 @@ class _ContainerDisplayingCommunicationsState
 
   Future<void> markAsRead(String messageId) async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    const apiUrl = 'https://ippu.org/api/mark-as-read';
+    final apiUrl = '$baseUrl/mark-as-read';
 
     // Define the headers with the bearer token
     final headers = {

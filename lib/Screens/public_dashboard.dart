@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/Widgets/AuthenticationWidgets/LoginScreen.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +27,8 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
   final List<JobData> _availableJobs = [];
   String latestCommunication = '';
   bool _isLoading = true;
+  final baseUrl = AppEndpoints.baseUrl;
+  final baseImageUrl = AppEndpoints.baseImageUrl;
 
   @override
   void initState() {
@@ -35,7 +38,7 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
 
   Future<List<JobData>> fetchJobData() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
-    const apiUrl = 'https://ippu.org/api/jobs';
+    final apiUrl = '$baseUrl/jobs';
 
     final headers = {
       'Authorization': 'Bearer ${userData?.token}',
@@ -332,7 +335,7 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(15)),
                 child: Image.network(
-                  'https://ippu.org/storage/banners/${event['banner_name']}',
+                  '$baseImageUrl/banners/${event['banner_name']}',
                   height: size.height * 0.15,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
@@ -455,7 +458,7 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(15)),
                 child: Image.network(
-                  'https://ippu.org/storage/banners/${cpd['banner']}',
+                  '$baseImageUrl/banners/${cpd['banner']}',
                   height: size.height * 0.15,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {

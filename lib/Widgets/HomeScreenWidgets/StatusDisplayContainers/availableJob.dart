@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:ippu/Screens/JobsScreen.dart';
+import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/models/JobData.dart';
 import 'package:ippu/models/UserProvider.dart';
 import 'package:provider/provider.dart';
@@ -32,7 +33,7 @@ class _availableJobState extends State<availableJob> {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
 
     // Define the URL with userData.id
-    const apiUrl = 'https://ippu.org/api/jobs';
+    const apiUrl = '${AppEndpoints.baseUrl}/jobs';
 
     // Define the headers with the bearer token
     final headers = {
