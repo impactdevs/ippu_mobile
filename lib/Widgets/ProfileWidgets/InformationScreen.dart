@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:ippu/Providers/ProfilePicProvider.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
-import 'package:ippu/Screens/EducationBackgroundScreen.dart';
 import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/UserData.dart';
@@ -48,7 +47,7 @@ class _InformationScreenState extends State<InformationScreen> {
   void initState() {
     super.initState();
     profileData = loadProfile();
-    _fetchAttendedEventsCount(); // Call the method to fetch attended events count
+    _fetchAttendedEventsCount();
   }
 
   Future<void> _fetchAttendedEventsCount() async {
@@ -68,7 +67,6 @@ class _InformationScreenState extends State<InformationScreen> {
         throw Exception("The return is an error");
       } else {
         if (response['data'] != null) {
-          // Access the user object directly from the 'data' key
           Map<String, dynamic> userData = response['data'];
           UserData profile = UserData(
             id: userData['id'],
@@ -95,7 +93,6 @@ class _InformationScreenState extends State<InformationScreen> {
 
           return profile;
         } else {
-          // Handle the case where the 'data' field in the API response is null
           throw Exception("You currently have no data");
         }
       }
@@ -109,9 +106,7 @@ class _InformationScreenState extends State<InformationScreen> {
     final userData = Provider.of<UserProvider>(context).user;
     final size = MediaQuery.of(context).size;
     var url = context.watch<ProfilePicProvider>().profilePic;
-    //split the url using / and get the last element,
     var lastElement = url.split('/').last;
-    //network url, if the last element is profiles, put default image
     var networkUrl = lastElement == 'profiles'
         ? 'https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes-thumbnail.png'
         : url;
@@ -124,222 +119,336 @@ class _InformationScreenState extends State<InformationScreen> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             final profileData = snapshot.data as UserData;
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView.builder(
-                itemCount: 1,
-                itemBuilder: (context, index) {
-                  return Column(
-                    children: [
-                      SizedBox(height: size.height * 0.008),
-
-                      SizedBox(height: size.height * 0.012),
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundImage: profilePhoto,
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+              ),
+              child: ListView(
+                padding: EdgeInsets.all(size.width * 0.04),
+                children: [
+                  // Profile Header Section
+                  Container(
+                    padding: EdgeInsets.all(size.width * 0.05),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue[700]!, Colors.blue[500]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-
-                      SizedBox(height: size.height * 0.014),
-                      Text(
-                        userData!.name,
-                        style: GoogleFonts.lato(
-                            fontSize: size.height * 0.02,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        userData.email,
-                        style: GoogleFonts.lato(color: Colors.grey),
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      if (status == 'Approved')
+                      borderRadius: BorderRadius.circular(size.width * 0.04),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: size.width * 0.15,
+                          backgroundImage: profilePhoto,
+                          backgroundColor: Colors.white,
+                        ),
+                        SizedBox(height: size.height * 0.02),
                         Text(
-                          "Subscriptions Ends: ${formatExpiryDate(profileData.membership_expiry_date)}",
-                          style: GoogleFonts.lato(color: Colors.grey),
+                          userData!.name,
+                          style: GoogleFonts.poppins(
+                            fontSize: size.width * 0.04,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
-                      SizedBox(height: size.height * 0.02),
-                      // add download membership certificate button
-                      if (status == 'Approved')
-                        ElevatedButton(
-                          onPressed: isDownloading
-                              ? null
-                              : () {
-                                  setState(() {
-                                    // show a loading indicator
-                                    isDownloading = true;
-                                    isLoadingTextVisible = true;
-                                  });
-                                  renderCertificateInBrowser().then((value) {
-                                    setState(() {
-                                      isDownloading = false;
-                                      isLoadingTextVisible = false;
-                                    });
-                                  });
-                                },
-                          child: const Text("Download Membership Certificate"),
+                        Text(
+                          userData.email,
+                          style: GoogleFonts.poppins(
+                            fontSize: size.width * 0.035,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
                         ),
-                      if (isLoadingTextVisible)
-                        const AnimatedLoadingText(
-                          loadingTexts: [
-                            "Getting certificate.......",
-                            "Please wait...",
-                          ],
-                        ),
-                      const Divider(height: 1),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Name"),
-                        subtitle: Text(profileData.name),
-                      )),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Email"),
-                        subtitle: Text(profileData.email),
-                      )),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Gender"),
-                        subtitle: Text("${profileData.gender}"),
-                      )),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Date of birth"),
-                        subtitle: Text("${profileData.dob}"),
-                      )),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Membership number"),
-                        subtitle: Text("${profileData.membership_number}"),
-                      )),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Address"),
-                        subtitle: Text("${profileData.address}"),
-                      )),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Phone number"),
-                        subtitle: Text("${profileData.phone_no}"),
-                      )),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Alt Phone number"),
-                        subtitle: Text("${profileData.alt_phone_no}"),
-                      )),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Next of Kin name"),
-                        subtitle: Text("${profileData.nok_name}"),
-                      )),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Next of Kin address"),
-                        subtitle: Text("${profileData.nok_address}"),
-                      )),
-                      Card(
-                          child: ListTile(
-                        title: const Text("Next of Kin phone number"),
-                        subtitle: Text("${profileData.nok_phone_no}"),
-                      )),
-
-                      //
-                      SizedBox(height: size.height * 0.02),
-                      const Divider(),
-                      SizedBox(height: size.height * 0.02),
-                      Padding(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: size.width * 0.12),
-                        child: GestureDetector(
-                          onTap: () {
-                            //naviagate to my events screen
-                            Navigator.pushNamed(context, '/myevents');
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'My Certificates ($numberOfCertificates )',
-                                style: GoogleFonts.lato(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: size.height * 0.028),
+                        if (status == 'Approved') ...[
+                          SizedBox(height: size.height * 0.015),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: size.width * 0.03,
+                                vertical: size.height * 0.008),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius:
+                                  BorderRadius.circular(size.width * 0.05),
+                            ),
+                            child: Text(
+                              "Subscription Ends: ${formatExpiryDate(profileData.membership_expiry_date)}",
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: size.width * 0.035,
                               ),
-                              const Icon(Icons.workspace_premium)
-                            ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: size.height * 0.025),
+
+                  // Membership Certificate Button
+                  if (status == 'Approved')
+                    Container(
+                      margin:
+                          EdgeInsets.symmetric(vertical: size.height * 0.012),
+                      child: ElevatedButton.icon(
+                        onPressed: isDownloading
+                            ? null
+                            : () {
+                                setState(() {
+                                  isDownloading = true;
+                                  isLoadingTextVisible = true;
+                                });
+                                renderCertificateInBrowser().then((value) {
+                                  setState(() {
+                                    isDownloading = false;
+                                    isLoadingTextVisible = false;
+                                  });
+                                });
+                              },
+                        icon: const Icon(Icons.download),
+                        label: Text(
+                          "Download Membership Certificate",
+                          style: GoogleFonts.poppins(),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                              vertical: size.height * 0.02),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(size.width * 0.025),
                           ),
                         ),
                       ),
-                      //
-                      SizedBox(height: size.height * 0.02),
-                      const Divider(),
-                      SizedBox(height: size.height * 0.02),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (context) {
-                            return const EducationBackgroundScreen();
-                          }));
-                        },
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.12),
-                          child: GestureDetector(
-                            onTap: () {
-                              //navigate to education background screen
-                              Navigator.pushNamed(
-                                  context, '/educationbackground');
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Education background",
-                                  style: GoogleFonts.lato(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: size.height * 0.028),
-                                ),
-                                const Icon(Icons.cast_for_education)
-                              ],
+                    ),
+
+                  if (isLoadingTextVisible)
+                    const AnimatedLoadingText(
+                      loadingTexts: [
+                        "Getting certificate.......",
+                        "Please wait...",
+                      ],
+                    ),
+
+                  // Profile Information Cards
+                  Container(
+                    margin: EdgeInsets.only(top: size.height * 0.025),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                              left: size.width * 0.02,
+                              bottom: size.height * 0.015),
+                          child: Text(
+                            "Personal Information",
+                            style: GoogleFonts.poppins(
+                              fontSize: size.width * 0.045,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[800],
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      const Divider(),
-                      SizedBox(height: size.height * 0.02),
-                      Padding(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: size.width * 0.12),
-                        child: GestureDetector(
-                          onTap: () {
-                            //navigate to communication screen
-                            Navigator.pushNamed(context, '/workexperience');
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Working Experience",
-                                style: GoogleFonts.lato(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: size.height * 0.028),
-                              ),
-                              const Icon(Icons.work_history)
-                            ],
+                        _buildInfoCard("Name", profileData.name),
+                        _buildInfoCard("Email", profileData.email),
+                        _buildInfoCard("Gender", profileData.gender),
+                        _buildInfoCard("Date of Birth", profileData.dob),
+                        _buildInfoCard(
+                            "Membership Number", profileData.membership_number),
+                        _buildInfoCard("Address", profileData.address),
+                        _buildInfoCard("Phone Number", profileData.phone_no),
+                        _buildInfoCard(
+                            "Alt Phone Number", profileData.alt_phone_no),
+                      ],
+                    ),
+                  ),
+
+                  // Next of Kin Information
+                  Container(
+                    margin: EdgeInsets.only(top: size.height * 0.035),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                              left: size.width * 0.02,
+                              bottom: size.height * 0.015),
+                          child: Text(
+                            "Next of Kin Details",
+                            style: GoogleFonts.poppins(
+                              fontSize: size.width * 0.045,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[800],
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: size.height * 0.12),
-                    ],
-                  );
-                },
+                        _buildInfoCard("Name", profileData.nok_name),
+                        _buildInfoCard("Address", profileData.nok_address),
+                        _buildInfoCard(
+                            "Phone Number", profileData.nok_phone_no),
+                      ],
+                    ),
+                  ),
+
+                  // Quick Actions Section
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: size.height * 0.035),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                              left: size.width * 0.02,
+                              bottom: size.height * 0.015),
+                          child: Text(
+                            "Quick Actions",
+                            style: GoogleFonts.poppins(
+                              fontSize: size.width * 0.045,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[800],
+                            ),
+                          ),
+                        ),
+                        _buildActionCard(
+                          "My Certificates",
+                          "View your earned certificates",
+                          Icons.workspace_premium,
+                          numberOfCertificates.toString(),
+                          () => Navigator.pushNamed(context, '/myevents'),
+                        ),
+                        _buildActionCard(
+                          "Education Background",
+                          "Manage your educational history",
+                          Icons.school,
+                          "",
+                          () => Navigator.pushNamed(
+                              context, '/educationbackground'),
+                        ),
+                        _buildActionCard(
+                          "Working Experience",
+                          "Update your work history",
+                          Icons.work,
+                          "",
+                          () => Navigator.pushNamed(context, '/workexperience'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             );
           } else if (snapshot.hasError) {
-            return const Center(
-                child: Text("An error occured while loading your profile"));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline,
+                      size: size.width * 0.15, color: Colors.red[300]),
+                  SizedBox(height: size.height * 0.02),
+                  Text(
+                    "An error occurred while loading your profile",
+                    style: GoogleFonts.poppins(
+                      fontSize: size.width * 0.04,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+            );
           } else {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
           }
         });
+  }
+
+  Widget _buildInfoCard(String title, String? value) {
+    final size = MediaQuery.of(context).size;
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.symmetric(
+          vertical: size.height * 0.008, horizontal: size.width * 0.005),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(size.width * 0.03),
+      ),
+      child: ListTile(
+        title: Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontSize: size.width * 0.03,
+            color: Colors.grey[600],
+          ),
+        ),
+        subtitle: Text(
+          value ?? "Not provided",
+          style: GoogleFonts.poppins(
+            fontSize: size.width * 0.035,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionCard(String title, String subtitle, IconData icon,
+      String badge, VoidCallback onTap) {
+    final size = MediaQuery.of(context).size;
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.symmetric(
+          vertical: size.height * 0.008, horizontal: size.width * 0.005),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(size.width * 0.03),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: CircleAvatar(
+          backgroundColor: Colors.blue[50],
+          child: Icon(icon, color: Colors.blue[700]),
+        ),
+        title: Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: GoogleFonts.poppins(
+            fontSize: size.width * 0.03,
+            color: Colors.grey[600],
+          ),
+        ),
+        trailing: badge.isNotEmpty
+            ? Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.03,
+                    vertical: size.height * 0.008),
+                decoration: BoxDecoration(
+                  color: Colors.blue[100],
+                  borderRadius: BorderRadius.circular(size.width * 0.05),
+                ),
+                child: Text(
+                  badge,
+                  style: GoogleFonts.poppins(
+                    color: Colors.blue[900],
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            : Icon(Icons.arrow_forward_ios, color: Colors.grey[400]),
+      ),
+    );
   }
 
   Future<int> certificateCount() async {
@@ -354,21 +463,17 @@ class _InformationScreenState extends State<InformationScreen> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonData = jsonDecode(response.body);
         final List<dynamic> eventData = jsonData['data'];
-        // Return the count of attended events
         return eventData.length;
       } else {
         throw Exception('Failed to load events data');
       }
     } catch (error) {
-      // Handle the error here, e.g., display an error message to the user
-      return 0; // Return 0 or handle the error count in your UI
+      return 0;
     }
   }
 
   Future<void> renderCertificateInBrowser() async {
     AuthController authController = AuthController();
-
-    //show a loading indicator
 
     try {
       final response = await authController.downloadMembershipCertificate();
@@ -381,7 +486,6 @@ class _InformationScreenState extends State<InformationScreen> {
           ),
         );
       } else {
-        //save certificate to disk
         _saveImage(context, response['certificate']);
       }
     } catch (e) {
@@ -399,21 +503,12 @@ class _InformationScreenState extends State<InformationScreen> {
     late String message;
 
     try {
-      // Download image
       final http.Response response = await http.get(Uri.parse(_url));
-
-      // Get temporary directory
       final dir = await getTemporaryDirectory();
-
-      // Create an image name
       var filename =
           '${dir.path}/membership_certificate${random.nextInt(100)}.png';
-
-      // Save to filesystem
       final file = File(filename);
       await file.writeAsBytes(response.bodyBytes);
-
-      // Ask the user to save it
       final params = SaveFileDialogParams(sourceFilePath: file.path);
       final finalPath = await FlutterFileDialog.saveFile(params: params);
 
@@ -456,7 +551,7 @@ class _InformationScreenState extends State<InformationScreen> {
       final parsedDate = DateTime.parse(expiryDate);
       return DateFormat('dd-MM-yyyy').format(parsedDate);
     } catch (e) {
-      return expiryDate; // Return the raw string if parsing fails
+      return expiryDate;
     }
   }
 }

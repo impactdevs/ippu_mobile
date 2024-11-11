@@ -288,335 +288,495 @@ class _EditProfileState extends State<EditProfile> {
             selectedAccountType = 2;
           }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundImage: _avatarImage,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: InkWell(
-                      onTap: _pickImage,
-                      child: const CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.blue,
-                        child: Icon(Icons.camera_alt, color: Colors.white),
+          return SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.05, vertical: size.height * 0.02),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(height: size.height * 0.025),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: size.width * 0.15,
+                      backgroundImage: _avatarImage,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: InkWell(
+                        onTap: _pickImage,
+                        child: CircleAvatar(
+                          radius: size.width * 0.045,
+                          backgroundColor: const Color(0xFF2A81C9),
+                          child:
+                              const Icon(Icons.camera_alt, color: Colors.white),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              SizedBox(height: size.height * 0.014),
-              Text(
-                userDataProfile.name,
-                style: GoogleFonts.lato(
-                    fontSize: size.height * 0.03, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                userDataProfile.email,
-                style: GoogleFonts.lato(color: Colors.grey),
-              ),
-              SizedBox(height: size.height * 0.02),
-              const Divider(height: 1),
-              SizedBox(height: size.height * 0.02),
-              const Text(
-                'Complete Profile',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 42, 129, 201),
-                ),
-              ),
-              SizedBox(height: size.height * 0.02),
-              // a form for editing user profile to be added here
-              // UserProfileForm(),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: size.width * 0.016),
-                child: Column(
-                  children: [
-                    Form(
-                        key: _formKey,
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              TextFormField(
-                                decoration: InputDecoration(
-                                  labelText: 'Name',
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                ),
-                                onSaved: (value) {
-                                  name = value ?? userDataProfile.name;
-                                },
-                                initialValue: userDataProfile.name,
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                              Text("Gender:",
-                                  style: GoogleFonts.lato(
-                                    color: Colors.grey,
-                                    fontSize: size.height * 0.018,
-                                  )),
-                              Row(
-                                children: [
-                                  Radio(
-                                    value: 'male',
-                                    groupValue: gender,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        gender = value.toString();
-                                        isMale = true;
-                                        isFemale = false;
-                                      });
-                                    },
-                                  ),
-                                  const Text('Male'),
-                                  Radio(
-                                    value: 'female',
-                                    groupValue: gender,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        gender = value.toString();
-                                        isMale = false;
-                                        isFemale = true;
-                                      });
-                                    },
-                                  ),
-                                  const Text('Female'),
-                                ],
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                              //account type dropdown
-                              DropdownButtonFormField(
-                                decoration: InputDecoration(
-                                  labelText: 'Account Type',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                                items: accountTypes
-                                    .map((accountType) => DropdownMenuItem(
-                                          value: accountType['id'],
-                                          child: Text(
-                                            accountType['name'],
-                                            style: GoogleFonts.lato(
-                                              color: Colors.blue,
-                                            ),
-                                          ),
-                                        ))
-                                    .toList(),
-                                //initial value as value with id 1 from drop down list
-                                value: real_selected_id,
-                                onChanged: (value) {
-                                  setState(() {
-                                    //get the index of the selected account type in accountTypes
-                                    final index = accountTypes.indexWhere(
-                                        (element) => element['id'] == value);
-                                    selectedAccountType = index;
-                                    log("selected Account: $selectedAccountType");
-                                    real_selected_id =
-                                        accountTypes[selectedAccountType]['id'];
-                                    log("real value: $real_selected_id");
-                                    // selectedAccountType = value as int;
-                                  });
-                                },
-                                validator: (value) {
-                                  if (value == null) {
-                                    return 'Please select an account type';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                              TextFormField(
-                                controller: _dateController,
-                                decoration: InputDecoration(
-                                  labelText: 'Date of Birth',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                                onTap: () =>
-                                    _selectDate(context, _dateController),
-                                onSaved: (value) {
-                                  dob = (_dateController.text);
-                                },
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'this field is required';
-                                  }
-
-                                  //check if the person is 18 years and above
-                                  final date =
-                                      DateFormat('yyyy-MM-dd').parse(value);
-                                  if (!isEighteenYearsAndAbove(date)) {
-                                    return 'You must be 18 years and above';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                              TextFormField(
-                                decoration: InputDecoration(
-                                  labelText: 'Membership Number',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                                onSaved: (value) {
-                                  membershipNumber = value ??
-                                      userDataProfile.membership_number ??
-                                      '';
-                                },
-                                initialValue:
-                                    userDataProfile.membership_number ?? '',
-                                enabled: false,
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                              TextFormField(
-                                decoration: InputDecoration(
-                                  labelText: 'Place of Residence',
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                ),
-                                onSaved: (value) {
-                                  address = (value ?? userDataProfile.address)!;
-                                },
-                                initialValue: userDataProfile.address,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'this field is required';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                              TextFormField(
-                                decoration: InputDecoration(
-                                  labelText: 'Phone Number',
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                ),
-                                inputFormatters: [PhoneNumberFormatter()],
-                                keyboardType: TextInputType.phone,
-                                onSaved: (value) {
-                                  //remove spaces from phone number
-                                  phoneNo = (value ?? userDataProfile.phone_no)!
-                                      .replaceAll(' ', '');
-                                },
-                                initialValue:
-                                    padPhoneNumber(userDataProfile.phone_no),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'this field is required';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                              TextFormField(
-                                decoration: InputDecoration(
-                                  labelText: 'Alternate Phone Number',
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                ),
-                                inputFormatters: [PhoneNumberFormatter()],
-                                keyboardType: TextInputType.phone,
-                                onSaved: (value) {
-                                  altPhoneNo =
-                                      (value ?? userDataProfile.alt_phone_no)!
-                                          .replaceAll(' ', '');
-                                },
-                                initialValue: padPhoneNumber(
-                                    userDataProfile.alt_phone_no),
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                              TextFormField(
-                                decoration: InputDecoration(
-                                  labelText: 'Next of Kin Name',
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                ),
-                                onSaved: (value) {
-                                  nokName =
-                                      (value ?? userDataProfile.nok_name)!;
-                                },
-                                initialValue: userDataProfile.nok_name,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'this field is required';
-                                  }
-                                  //check if length of phone number is 13
-                                  if (value.length < 3) {
-                                    return 'Invalid name';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                              TextFormField(
-                                decoration: InputDecoration(
-                                  labelText: 'Next of Kin Address',
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                ),
-                                onSaved: (value) {
-                                  nokAddress =
-                                      (value ?? userDataProfile.nok_address)!;
-                                },
-                                initialValue: userDataProfile.nok_address,
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                              TextFormField(
-                                decoration: InputDecoration(
-                                  labelText: 'Next of Kin Phone Number',
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                ),
-                                onSaved: (value) {
-                                  nokPhoneNo =
-                                      (value ?? userDataProfile.nok_phone_no)!;
-                                },
-                                initialValue: userDataProfile.nok_phone_no,
-                              ),
-                              SizedBox(height: size.height * 0.018),
-                            ]))
                   ],
                 ),
-              ),
-              // form ends here
-              SizedBox(height: size.height * 0.01),
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(
-                        255, 42, 129, 201), // Change button color to green
-                    padding: EdgeInsets.all(size.height * 0.024),
-                  ),
-                  onPressed: () {
-                    final accountID = accountTypes[selectedAccountType]['id'];
-                    _submitForm(accountID);
-                  },
-                  child: Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: size.width * 0.12),
-                    child: Text(
-                      'update profile',
-                      style: GoogleFonts.lato(
-                        color: Colors.white,
-                      ),
-                    ),
+                SizedBox(height: size.height * 0.02),
+                Text(
+                  userDataProfile.name,
+                  style: GoogleFonts.poppins(
+                      fontSize: size.height * 0.028,
+                      fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  userDataProfile.email,
+                  style: GoogleFonts.poppins(
+                      color: Colors.grey[600], fontSize: size.height * 0.016),
+                ),
+                SizedBox(height: size.height * 0.025),
+                const Divider(height: 1),
+                SizedBox(height: size.height * 0.025),
+                Text(
+                  'Complete Profile',
+                  style: GoogleFonts.poppins(
+                    fontSize: size.height * 0.024,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF2A81C9),
                   ),
                 ),
-              ),
-              SizedBox(height: size.height * 0.018),
-            ],
+                SizedBox(height: size.height * 0.025),
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        style: GoogleFonts.poppins(),
+                        decoration: InputDecoration(
+                          labelText: 'Name',
+                          labelStyle:
+                              GoogleFonts.poppins(color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF2A81C9)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF2A81C9), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.04,
+                              vertical: size.height * 0.02),
+                        ),
+                        onSaved: (value) {
+                          name = value ?? userDataProfile.name;
+                        },
+                        initialValue: userDataProfile.name,
+                      ),
+                      SizedBox(height: size.height * 0.02),
+                      Text("Gender:",
+                          style: GoogleFonts.poppins(
+                            color: Colors.grey[700],
+                            fontSize: size.height * 0.018,
+                          )),
+                      Row(
+                        children: [
+                          Radio(
+                            value: 'male',
+                            groupValue: gender,
+                            activeColor: const Color(0xFF2A81C9),
+                            onChanged: (value) {
+                              setState(() {
+                                gender = value.toString();
+                                isMale = true;
+                                isFemale = false;
+                              });
+                            },
+                          ),
+                          Text('Male', style: GoogleFonts.poppins()),
+                          Radio(
+                            value: 'female',
+                            groupValue: gender,
+                            activeColor: const Color(0xFF2A81C9),
+                            onChanged: (value) {
+                              setState(() {
+                                gender = value.toString();
+                                isMale = false;
+                                isFemale = true;
+                              });
+                            },
+                          ),
+                          Text('Female', style: GoogleFonts.poppins()),
+                        ],
+                      ),
+                      SizedBox(height: size.height * 0.02),
+                      DropdownButtonFormField(
+                        style: GoogleFonts.poppins(color: Colors.black),
+                        decoration: InputDecoration(
+                          labelText: 'Account Type',
+                          labelStyle:
+                              GoogleFonts.poppins(color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF2A81C9), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.04,
+                              vertical: size.height * 0.02),
+                        ),
+                        items: accountTypes
+                            .map((accountType) => DropdownMenuItem(
+                                  value: accountType['id'],
+                                  child: Text(
+                                    accountType['name'],
+                                    style: GoogleFonts.poppins(),
+                                  ),
+                                ))
+                            .toList(),
+                        value: real_selected_id,
+                        onChanged: (value) {
+                          setState(() {
+                            final index = accountTypes.indexWhere(
+                                (element) => element['id'] == value);
+                            selectedAccountType = index;
+                            log("selected Account: $selectedAccountType");
+                            real_selected_id =
+                                accountTypes[selectedAccountType]['id'];
+                            log("real value: $real_selected_id");
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select an account type';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: size.height * 0.02),
+                      TextFormField(
+                        controller: _dateController,
+                        style: GoogleFonts.poppins(),
+                        decoration: InputDecoration(
+                          labelText: 'Date of Birth',
+                          labelStyle:
+                              GoogleFonts.poppins(color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF2A81C9), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.04,
+                              vertical: size.height * 0.02),
+                        ),
+                        onTap: () => _selectDate(context, _dateController),
+                        onSaved: (value) {
+                          dob = (_dateController.text);
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'This field is required';
+                          }
+                          final date = DateFormat('yyyy-MM-dd').parse(value);
+                          if (!isEighteenYearsAndAbove(date)) {
+                            return 'You must be 18 years and above';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: size.height * 0.02),
+                      TextFormField(
+                        enabled: false,
+                        style: GoogleFonts.poppins(),
+                        decoration: InputDecoration(
+                          labelText: 'Membership Number',
+                          labelStyle:
+                              GoogleFonts.poppins(color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF2A81C9), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.04,
+                              vertical: size.height * 0.02),
+                        ),
+                        onSaved: (value) {
+                          membershipNumber =
+                              value ?? userDataProfile.membership_number ?? '';
+                        },
+                        initialValue: userDataProfile.membership_number ?? '',
+                      ),
+                      SizedBox(height: size.height * 0.02),
+                      TextFormField(
+                        style: GoogleFonts.poppins(),
+                        decoration: InputDecoration(
+                          labelText: 'Place of Residence',
+                          labelStyle:
+                              GoogleFonts.poppins(color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF2A81C9), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.04,
+                              vertical: size.height * 0.02),
+                        ),
+                        onSaved: (value) {
+                          address = (value ?? userDataProfile.address)!;
+                        },
+                        initialValue: userDataProfile.address,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'This field is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: size.height * 0.02),
+                      TextFormField(
+                        style: GoogleFonts.poppins(),
+                        decoration: InputDecoration(
+                          labelText: 'Phone Number',
+                          labelStyle:
+                              GoogleFonts.poppins(color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF2A81C9), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.04,
+                              vertical: size.height * 0.02),
+                        ),
+                        inputFormatters: [PhoneNumberFormatter()],
+                        keyboardType: TextInputType.phone,
+                        onSaved: (value) {
+                          phoneNo = (value ?? userDataProfile.phone_no)!
+                              .replaceAll(' ', '');
+                        },
+                        initialValue: userDataProfile.phone_no,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'This field is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: size.height * 0.02),
+                      TextFormField(
+                        style: GoogleFonts.poppins(),
+                        decoration: InputDecoration(
+                          labelText: 'Alternate Phone Number',
+                          labelStyle:
+                              GoogleFonts.poppins(color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF2A81C9), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.04,
+                              vertical: size.height * 0.02),
+                        ),
+                        inputFormatters: [PhoneNumberFormatter()],
+                        keyboardType: TextInputType.phone,
+                        onSaved: (value) {
+                          altPhoneNo = (value ?? userDataProfile.alt_phone_no)!
+                              .replaceAll(' ', '');
+                        },
+                        initialValue: userDataProfile.alt_phone_no,
+                      ),
+                      SizedBox(height: size.height * 0.02),
+                      TextFormField(
+                        style: GoogleFonts.poppins(),
+                        decoration: InputDecoration(
+                          labelText: 'Next of Kin Name',
+                          labelStyle:
+                              GoogleFonts.poppins(color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF2A81C9), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.04,
+                              vertical: size.height * 0.02),
+                        ),
+                        onSaved: (value) {
+                          nokName = (value ?? userDataProfile.nok_name)!;
+                        },
+                        initialValue: userDataProfile.nok_name,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'This field is required';
+                          }
+                          if (value.length < 3) {
+                            return 'Invalid name';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: size.height * 0.02),
+                      TextFormField(
+                        style: GoogleFonts.poppins(),
+                        decoration: InputDecoration(
+                          labelText: 'Next of Kin Address',
+                          labelStyle:
+                              GoogleFonts.poppins(color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF2A81C9), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.04,
+                              vertical: size.height * 0.02),
+                        ),
+                        onSaved: (value) {
+                          nokAddress = (value ?? userDataProfile.nok_address)!;
+                        },
+                        initialValue: userDataProfile.nok_address,
+                      ),
+                      SizedBox(height: size.height * 0.02),
+                      TextFormField(
+                        style: GoogleFonts.poppins(),
+                        decoration: InputDecoration(
+                          labelText: 'Next of Kin Phone Number',
+                          labelStyle:
+                              GoogleFonts.poppins(color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF2A81C9), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.04,
+                              vertical: size.height * 0.02),
+                        ),
+                        onSaved: (value) {
+                          nokPhoneNo = (value ?? userDataProfile.nok_phone_no)!;
+                        },
+                        initialValue: userDataProfile.nok_phone_no,
+                      ),
+                      SizedBox(height: size.height * 0.03),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2A81C9),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: size.height * 0.02,
+                          ),
+                        ),
+                        onPressed: () {
+                          final accountID =
+                              accountTypes[selectedAccountType]['id'];
+                          _submitForm(accountID);
+                        },
+                        child: Text(
+                          'Update Profile',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: size.height * 0.018,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: size.height * 0.03),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           );
         }
         return const Scaffold(
