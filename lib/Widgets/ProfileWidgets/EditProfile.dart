@@ -312,7 +312,11 @@ class _EditProfileState extends State<EditProfile> {
   Widget _buildPhoneField(
       String label, String? initialValue, Function(String?) onSaved) {
     return TextFormField(
-      initialValue: initialValue,
+      initialValue: initialValue != null && initialValue.isNotEmpty
+          ? (initialValue.startsWith('+256')
+              ? initialValue
+              : '+256$initialValue')
+          : '+256',
       style: GoogleFonts.poppins(),
       decoration: InputDecoration(
         labelText: label,
@@ -329,12 +333,23 @@ class _EditProfileState extends State<EditProfile> {
         filled: true,
         fillColor: Colors.grey[50],
       ),
-      inputFormatters: [PhoneNumberFormatter()],
+      inputFormatters: [
+        PhoneNumberFormatter(),
+      ],
       keyboardType: TextInputType.phone,
-      onSaved: onSaved,
+      onSaved: (value) {
+        if (value != null && value.isNotEmpty) {
+          onSaved(value.startsWith('+256') ? value : '+256$value');
+        } else {
+          onSaved(null);
+        }
+      },
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'This field is required';
+        }
+        if (!value.startsWith('+256')) {
+          return 'Phone number must start with +256';
         }
         return null;
       },
@@ -394,7 +409,8 @@ class _EditProfileState extends State<EditProfile> {
       return const Text('No account types available');
     }
 
-    selectedAccountType = _accountTypes[accountId];
+    selectedAccountType = _accountTypes[
+        _accountTypes.indexWhere((type) => type['id'] == accountId)];
 
     return DropdownButtonFormField<int>(
       value: selectedAccountType['id'],
