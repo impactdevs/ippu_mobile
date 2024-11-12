@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -15,10 +14,11 @@ import 'package:ippu/models/UserData.dart';
 import 'dart:io';
 import 'package:ippu/models/UserProvider.dart';
 import 'package:provider/provider.dart';
-import 'package:ippu/Screens/animated_text.dart';
 
 class EditProfile extends StatefulWidget {
-  const EditProfile({super.key});
+  final UserData userData;
+
+  const EditProfile({super.key, required this.userData});
 
   @override
   State<EditProfile> createState() => _EditProfileState();
@@ -27,63 +27,34 @@ class EditProfile extends StatefulWidget {
 class _EditProfileState extends State<EditProfile> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _dateController = TextEditingController();
-  late Future<UserData> userDataFuture;
-  late Future<dynamic> profileData;
-  late UserData userDataProfile;
 
-  String name = '';
-  String gender = '';
-  String dob = '';
-  String membershipNumber = '';
-  String address = '';
-  String phoneNo = '';
-  String altPhoneNo = '';
-  String nokName = '';
-  String nokAddress = '';
-  String nokPhoneNo = '';
+  late String name;
+  late String gender;
+  late String dob;
+  late String membershipNumber;
+  late String address;
+  late String phoneNo;
+  late String altPhoneNo;
+  late String nokName;
+  late String nokAddress;
+  late String nokPhoneNo;
 
-  bool isMale = false;
-  bool isFemale = false;
-  int selectedAccountType = 1;
-  int real_selected_id = 8;
-  late var _accountTypes;
+  late bool isMale;
+  late bool isFemale;
+  Map<String, dynamic> selectedAccountType = {};
+  late int accountId;
 
   late ImageProvider _avatarImage;
 
-  final FocusNode _dateFocusNode = FocusNode();
+  List<Map<String, dynamic>> _accountTypes = [];
+  bool _isLoadingAccountTypes = true;
+  String? _accountTypesError;
 
   @override
   void initState() {
     super.initState();
-    //get account types
-    _accountTypes = _fetchAccountTypes();
-    _avatarImage = NetworkImage(
-        Provider.of<ProfilePicProvider>(context, listen: false).profilePic);
-    //set date controller from user data
-
-    profileData = loadProfile();
-
-    //set the date controller to the date field from profileData
-    profileData.then((value) {
-      _dateController.text = value.dob ?? '';
-
-      //set gender
-      if (value.gender != null) {
-        setState(() {
-          gender = value.gender!;
-          isMale = gender == 'male';
-          isFemale = gender == 'female';
-        });
-      }
-
-      //set selected account type
-      if (value.account_type_id != null) {
-        setState(() {
-          selectedAccountType = value.account_type_id!;
-          real_selected_id = value.account_type_id!;
-        });
-      }
-    });
+    _initializeData();
+    _fetchAccountTypes();
   }
 
   Future<List<Map<String, dynamic>>> _fetchAccountTypes() async {
@@ -105,6 +76,11 @@ class _EditProfileState extends State<EditProfile> {
           final accountTypeNames = data
               .map((entry) => {'id': entry['id'], 'name': entry['name']})
               .toList();
+
+          setState(() {
+            _isLoadingAccountTypes = false;
+            _accountTypes = accountTypeNames;
+          });
           return accountTypeNames;
         }
       } else {
@@ -119,17 +95,405 @@ class _EditProfileState extends State<EditProfile> {
     }
   }
 
+  void _initializeData() {
+    name = widget.userData.name;
+    gender = widget.userData.gender ?? '';
+    dob = widget.userData.dob ?? '';
+    membershipNumber = widget.userData.membership_number ?? '';
+    address = widget.userData.address ?? '';
+    phoneNo = widget.userData.phone_no ?? '';
+    altPhoneNo = widget.userData.alt_phone_no ?? '';
+    nokName = widget.userData.nok_name ?? '';
+    nokAddress = widget.userData.nok_address ?? '';
+    nokPhoneNo = widget.userData.nok_phone_no ?? '';
+    accountId = widget.userData.account_type_id ?? 3;
+
+    _dateController.text = dob;
+    isMale = gender == 'male';
+    isFemale = gender == 'female';
+    _avatarImage = NetworkImage(
+        Provider.of<ProfilePicProvider>(context, listen: false).profilePic);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF2A81C9),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+        ),
+        title: Text(
+          "Edit Profile",
+          style: GoogleFonts.lato(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.05, vertical: size.height * 0.02),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: size.height * 0.025),
+            _buildProfileImage(size),
+            SizedBox(height: size.height * 0.02),
+            Text(
+              widget.userData.name,
+              style: GoogleFonts.poppins(
+                  fontSize: size.height * 0.028, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              widget.userData.email,
+              style: GoogleFonts.poppins(
+                  color: Colors.grey[600], fontSize: size.height * 0.016),
+            ),
+            SizedBox(height: size.height * 0.025),
+            const Divider(height: 1),
+            SizedBox(height: size.height * 0.025),
+            Text(
+              'Complete Profile',
+              style: GoogleFonts.poppins(
+                fontSize: size.height * 0.024,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF2A81C9),
+              ),
+            ),
+            SizedBox(height: size.height * 0.025),
+            _buildForm(size),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileImage(Size size) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        CircleAvatar(
+          radius: size.width * 0.15,
+          backgroundImage: _avatarImage,
+        ),
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: InkWell(
+            onTap: _pickImage,
+            child: CircleAvatar(
+              radius: size.width * 0.045,
+              backgroundColor: const Color(0xFF2A81C9),
+              child: const Icon(Icons.camera_alt, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildForm(Size size) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildTextField('Name', name, (value) => name = value ?? name),
+          SizedBox(height: size.height * 0.02),
+          _buildGenderSelection(),
+          SizedBox(height: size.height * 0.02),
+          _buildAccountTypeDropdown(),
+          SizedBox(height: size.height * 0.02),
+          _buildDateField(size),
+          SizedBox(height: size.height * 0.02),
+          TextFormField(
+            enabled: false,
+            initialValue: membershipNumber,
+            style: GoogleFonts.poppins(color: Colors.grey[700]),
+            decoration: InputDecoration(
+              labelText: 'Membership Number',
+              labelStyle: GoogleFonts.poppins(color: Colors.grey[700]),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide:
+                    const BorderSide(color: Color(0xFF2A81C9), width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.grey[100],
+            ),
+          ),
+          SizedBox(height: size.height * 0.02),
+          _buildTextField('Place of Residence', address,
+              (value) => address = value ?? address),
+          SizedBox(height: size.height * 0.02),
+          _buildPhoneField(
+              'Phone Number', phoneNo, (value) => phoneNo = value ?? phoneNo),
+          SizedBox(height: size.height * 0.02),
+          _buildPhoneField('Alternate Phone Number', altPhoneNo,
+              (value) => altPhoneNo = value ?? altPhoneNo),
+          SizedBox(height: size.height * 0.02),
+          _buildTextField('Next of Kin Name', nokName,
+              (value) => nokName = value ?? nokName),
+          SizedBox(height: size.height * 0.02),
+          _buildTextField('Next of Kin Address', nokAddress,
+              (value) => nokAddress = value ?? nokAddress),
+          SizedBox(height: size.height * 0.02),
+          _buildPhoneField('Next of Kin Phone Number', nokPhoneNo,
+              (value) => nokPhoneNo = value ?? nokPhoneNo),
+          SizedBox(height: size.height * 0.03),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2A81C9),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: EdgeInsets.symmetric(
+                vertical: size.height * 0.02,
+              ),
+            ),
+            onPressed: _submitForm,
+            child: Text(
+              'Update Profile',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: size.height * 0.018,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          SizedBox(height: size.height * 0.03),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+      String label, String? initialValue, Function(String?) onSaved,
+      {bool enabled = true}) {
+    return TextFormField(
+      enabled: enabled,
+      initialValue: initialValue,
+      style: GoogleFonts.poppins(),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: GoogleFonts.poppins(color: Colors.grey[700]),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2A81C9), width: 2),
+        ),
+        filled: true,
+        fillColor: enabled ? Colors.grey[50] : Colors.grey[100],
+      ),
+      onSaved: onSaved,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'This field is required';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildPhoneField(
+      String label, String? initialValue, Function(String?) onSaved) {
+    return TextFormField(
+      initialValue: initialValue,
+      style: GoogleFonts.poppins(),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: GoogleFonts.poppins(color: Colors.grey[700]),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2A81C9), width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
+      ),
+      inputFormatters: [PhoneNumberFormatter()],
+      keyboardType: TextInputType.phone,
+      onSaved: onSaved,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'This field is required';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildGenderSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Gender:",
+            style: GoogleFonts.poppins(
+              color: Colors.grey[700],
+              fontSize: MediaQuery.of(context).size.height * 0.018,
+            )),
+        Row(
+          children: [
+            Radio(
+              value: 'male',
+              groupValue: gender,
+              activeColor: const Color(0xFF2A81C9),
+              onChanged: (value) {
+                setState(() {
+                  gender = value.toString();
+                  isMale = true;
+                  isFemale = false;
+                });
+              },
+            ),
+            Text('Male', style: GoogleFonts.poppins()),
+            Radio(
+              value: 'female',
+              groupValue: gender,
+              activeColor: const Color(0xFF2A81C9),
+              onChanged: (value) {
+                setState(() {
+                  gender = value.toString();
+                  isMale = false;
+                  isFemale = true;
+                });
+              },
+            ),
+            Text('Female', style: GoogleFonts.poppins()),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAccountTypeDropdown() {
+    if (_isLoadingAccountTypes) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (_accountTypesError != null) {
+      return Text(_accountTypesError!,
+          style: GoogleFonts.poppins(color: Colors.red));
+    } else if (_accountTypes.isEmpty) {
+      return const Text('No account types available');
+    }
+
+    selectedAccountType = _accountTypes[accountId];
+
+    return DropdownButtonFormField<int>(
+      value: selectedAccountType['id'],
+      style: GoogleFonts.poppins(color: Colors.black),
+      decoration: InputDecoration(
+        labelText: 'Account Type',
+        labelStyle: GoogleFonts.poppins(color: Colors.grey[700]),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2A81C9), width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
+      ),
+      items: _accountTypes
+          .map((accountType) => DropdownMenuItem<int>(
+                value: accountType['id'],
+                child: Text(accountType['name'], style: GoogleFonts.poppins()),
+              ))
+          .toList(),
+      onChanged: (value) {
+        setState(() {
+          selectedAccountType = _accountTypes[
+              _accountTypes.indexWhere((type) => type['id'] == value)];
+        });
+      },
+      validator: (value) {
+        if (value == null) {
+          return 'Please select an account type';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildDateField(Size size) {
+    return TextFormField(
+      controller: _dateController,
+      style: GoogleFonts.poppins(),
+      decoration: InputDecoration(
+        labelText: 'Date of Birth',
+        labelStyle: GoogleFonts.poppins(color: Colors.grey[700]),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2A81C9), width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
+      ),
+      onTap: () => _selectDate(context),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'This field is required';
+        }
+        final date = DateFormat('yyyy-MM-dd').parse(value);
+        if (!isEighteenYearsAndAbove(date)) {
+          return 'You must be 18 years and above';
+        }
+        return null;
+      },
+    );
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime currentDate = DateTime.now();
+    DateTime eighteenYearsAgo =
+        currentDate.subtract(const Duration(days: 18 * 365));
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(
+          eighteenYearsAgo.year, eighteenYearsAgo.month, eighteenYearsAgo.day),
+      firstDate: DateTime(1920),
+      lastDate: DateTime(2101),
+      selectableDayPredicate: (DateTime date) => date
+          .isBefore(currentDate.subtract(const Duration(days: 18 * 365 - 1))),
+    );
+    if (picked != null) {
+      setState(() {
+        _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
+      });
+    }
+  }
+
   Future<void> _pickImage() async {
     final pickedImage =
         await ImagePicker().pickImage(source: ImageSource.gallery);
-
-    // Check if the widget is still mounted before updating the state
-    if (!mounted) return;
-
-    if (pickedImage != null && mounted) {
+    if (pickedImage != null) {
       final selectedFile = File(pickedImage.path);
-
-      // Show a loading indicator while the image is being updated
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -148,10 +512,9 @@ class _EditProfileState extends State<EditProfile> {
 
       AuthController authController = AuthController();
       final userData = Provider.of<UserProvider>(context, listen: false).user;
-      final userId = userData?.id; // Replace with your actual user ID
+      final userId = userData?.id;
       final response = await authController.store(selectedFile, userId!);
 
-      // Close the loading indicator
       Navigator.of(context).pop();
 
       if (response.containsKey('message')) {
@@ -162,684 +525,38 @@ class _EditProfileState extends State<EditProfile> {
               Provider.of<ProfilePicProvider>(context, listen: false)
                   .profilePic);
         });
-
-        Fluttertoast.showToast(
-          msg: response['message'],
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-        );
+        showBottomNotification(response['message']);
       } else {
-        Fluttertoast.showToast(
-          msg: 'Failed to upload image',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-        );
+        showBottomNotification('Failed to upload image');
       }
     }
   }
 
-  @override
-  void dispose() {
-    _dateFocusNode.dispose();
-    super.dispose();
-  }
-
-  Future<UserData> loadProfile() async {
-    AuthController authController = AuthController();
-    try {
-      final response = await authController.getProfile();
-      if (response.containsKey("error")) {
-        throw Exception("The return is an error");
-      } else {
-        if (response['data'] != null) {
-          // Access the user object directly from the 'data' key
-          Map<String, dynamic> userData = response['data'];
-
-          UserData profile = UserData(
-              id: userData['id'],
-              name: userData['name'] ?? "",
-              email: userData['email'] ?? "",
-              gender: userData['gender'],
-              dob: userData['dob'] ?? "",
-              membership_number: userData['membership_number'] ?? "",
-              address: userData['address'] ?? "",
-              phone_no: userData['phone_no'] ?? "",
-              alt_phone_no: userData['alt_phone_no'] ?? "",
-              nok_name: userData['nok_name'] ?? "",
-              nok_address: userData['nok_address'] ?? "",
-              nok_phone_no: userData['nok_phone_no'] ?? "",
-              points: userData['points'] ?? "",
-              account_type_id: userData['account_type_id'] ?? 1,
-              subscription_status: userData['subscription_status'].toString(),
-              profile_pic: userData['profile_pic'] ??
-                  "https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes-thumbnail.png",
-              membership_expiry_date:
-                  userData['subscription_status'].toString() == "false"
-                      ? ""
-                      : userData['latest_membership']["expiry_date"]);
-
-          log("profile: ${response['data']}");
-
-          return profile;
-        } else {
-          // Handle the case where the 'data' field in the API response is null
-          throw Exception("You currently have no data");
-        }
-      }
-    } catch (error) {
-      throw Exception("An error occurred while loading the profile");
-    }
-  }
-
-  //combine the futures of account types and profile data
-  Future<List<dynamic>> _combineFutures() async {
-    return Future.wait([_accountTypes, profileData]);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return FutureBuilder(
-      future: _combineFutures(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Center(
-                child: Text("An error occurred while loading the profile data"),
-              ),
-            ],
-          );
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Center(
-                child: AnimatedLoadingText(
-                  loadingTexts: [
-                    "Fetching account data...",
-                    "Please wait...",
-                  ],
-                ),
-              ),
-            ],
-          );
-        }
-        if (snapshot.hasData) {
-          //get user data
-          userDataProfile = snapshot.data?[1] as UserData;
-          //selected account type
-          List<Map<String, dynamic>> accountTypes = snapshot.data?[0];
-
-          log('account types: $accountTypes');
-
-          //search for ana account type with the id of the selected account type
-          selectedAccountType = accountTypes
-              .indexWhere((element) => element['id'] == selectedAccountType);
-
-          //if selected account type is not found, set it to 8
-          if (selectedAccountType == -1) {
-            selectedAccountType = 2;
-          }
-
-          return SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.05, vertical: size.height * 0.02),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: size.height * 0.025),
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: size.width * 0.15,
-                      backgroundImage: _avatarImage,
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: InkWell(
-                        onTap: _pickImage,
-                        child: CircleAvatar(
-                          radius: size.width * 0.045,
-                          backgroundColor: const Color(0xFF2A81C9),
-                          child:
-                              const Icon(Icons.camera_alt, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: size.height * 0.02),
-                Text(
-                  userDataProfile.name,
-                  style: GoogleFonts.poppins(
-                      fontSize: size.height * 0.028,
-                      fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  userDataProfile.email,
-                  style: GoogleFonts.poppins(
-                      color: Colors.grey[600], fontSize: size.height * 0.016),
-                ),
-                SizedBox(height: size.height * 0.025),
-                const Divider(height: 1),
-                SizedBox(height: size.height * 0.025),
-                Text(
-                  'Complete Profile',
-                  style: GoogleFonts.poppins(
-                    fontSize: size.height * 0.024,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF2A81C9),
-                  ),
-                ),
-                SizedBox(height: size.height * 0.025),
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TextFormField(
-                        style: GoogleFonts.poppins(),
-                        decoration: InputDecoration(
-                          labelText: 'Name',
-                          labelStyle:
-                              GoogleFonts.poppins(color: Colors.grey[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFF2A81C9)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF2A81C9), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.04,
-                              vertical: size.height * 0.02),
-                        ),
-                        onSaved: (value) {
-                          name = value ?? userDataProfile.name;
-                        },
-                        initialValue: userDataProfile.name,
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      Text("Gender:",
-                          style: GoogleFonts.poppins(
-                            color: Colors.grey[700],
-                            fontSize: size.height * 0.018,
-                          )),
-                      Row(
-                        children: [
-                          Radio(
-                            value: 'male',
-                            groupValue: gender,
-                            activeColor: const Color(0xFF2A81C9),
-                            onChanged: (value) {
-                              setState(() {
-                                gender = value.toString();
-                                isMale = true;
-                                isFemale = false;
-                              });
-                            },
-                          ),
-                          Text('Male', style: GoogleFonts.poppins()),
-                          Radio(
-                            value: 'female',
-                            groupValue: gender,
-                            activeColor: const Color(0xFF2A81C9),
-                            onChanged: (value) {
-                              setState(() {
-                                gender = value.toString();
-                                isMale = false;
-                                isFemale = true;
-                              });
-                            },
-                          ),
-                          Text('Female', style: GoogleFonts.poppins()),
-                        ],
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      DropdownButtonFormField(
-                        style: GoogleFonts.poppins(color: Colors.black),
-                        decoration: InputDecoration(
-                          labelText: 'Account Type',
-                          labelStyle:
-                              GoogleFonts.poppins(color: Colors.grey[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF2A81C9), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.04,
-                              vertical: size.height * 0.02),
-                        ),
-                        items: accountTypes
-                            .map((accountType) => DropdownMenuItem(
-                                  value: accountType['id'],
-                                  child: Text(
-                                    accountType['name'],
-                                    style: GoogleFonts.poppins(),
-                                  ),
-                                ))
-                            .toList(),
-                        value: real_selected_id,
-                        onChanged: (value) {
-                          setState(() {
-                            final index = accountTypes.indexWhere(
-                                (element) => element['id'] == value);
-                            selectedAccountType = index;
-                            log("selected Account: $selectedAccountType");
-                            real_selected_id =
-                                accountTypes[selectedAccountType]['id'];
-                            log("real value: $real_selected_id");
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select an account type';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      TextFormField(
-                        controller: _dateController,
-                        style: GoogleFonts.poppins(),
-                        decoration: InputDecoration(
-                          labelText: 'Date of Birth',
-                          labelStyle:
-                              GoogleFonts.poppins(color: Colors.grey[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF2A81C9), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.04,
-                              vertical: size.height * 0.02),
-                        ),
-                        onTap: () => _selectDate(context, _dateController),
-                        onSaved: (value) {
-                          dob = (_dateController.text);
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'This field is required';
-                          }
-                          final date = DateFormat('yyyy-MM-dd').parse(value);
-                          if (!isEighteenYearsAndAbove(date)) {
-                            return 'You must be 18 years and above';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      TextFormField(
-                        enabled: false,
-                        style: GoogleFonts.poppins(),
-                        decoration: InputDecoration(
-                          labelText: 'Membership Number',
-                          labelStyle:
-                              GoogleFonts.poppins(color: Colors.grey[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF2A81C9), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.04,
-                              vertical: size.height * 0.02),
-                        ),
-                        onSaved: (value) {
-                          membershipNumber =
-                              value ?? userDataProfile.membership_number ?? '';
-                        },
-                        initialValue: userDataProfile.membership_number ?? '',
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      TextFormField(
-                        style: GoogleFonts.poppins(),
-                        decoration: InputDecoration(
-                          labelText: 'Place of Residence',
-                          labelStyle:
-                              GoogleFonts.poppins(color: Colors.grey[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF2A81C9), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.04,
-                              vertical: size.height * 0.02),
-                        ),
-                        onSaved: (value) {
-                          address = (value ?? userDataProfile.address)!;
-                        },
-                        initialValue: userDataProfile.address,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'This field is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      TextFormField(
-                        style: GoogleFonts.poppins(),
-                        decoration: InputDecoration(
-                          labelText: 'Phone Number',
-                          labelStyle:
-                              GoogleFonts.poppins(color: Colors.grey[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF2A81C9), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.04,
-                              vertical: size.height * 0.02),
-                        ),
-                        inputFormatters: [PhoneNumberFormatter()],
-                        keyboardType: TextInputType.phone,
-                        onSaved: (value) {
-                          phoneNo = (value ?? userDataProfile.phone_no)!
-                              .replaceAll(' ', '');
-                        },
-                        initialValue: userDataProfile.phone_no,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'This field is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      TextFormField(
-                        style: GoogleFonts.poppins(),
-                        decoration: InputDecoration(
-                          labelText: 'Alternate Phone Number',
-                          labelStyle:
-                              GoogleFonts.poppins(color: Colors.grey[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF2A81C9), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.04,
-                              vertical: size.height * 0.02),
-                        ),
-                        inputFormatters: [PhoneNumberFormatter()],
-                        keyboardType: TextInputType.phone,
-                        onSaved: (value) {
-                          altPhoneNo = (value ?? userDataProfile.alt_phone_no)!
-                              .replaceAll(' ', '');
-                        },
-                        initialValue: userDataProfile.alt_phone_no,
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      TextFormField(
-                        style: GoogleFonts.poppins(),
-                        decoration: InputDecoration(
-                          labelText: 'Next of Kin Name',
-                          labelStyle:
-                              GoogleFonts.poppins(color: Colors.grey[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF2A81C9), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.04,
-                              vertical: size.height * 0.02),
-                        ),
-                        onSaved: (value) {
-                          nokName = (value ?? userDataProfile.nok_name)!;
-                        },
-                        initialValue: userDataProfile.nok_name,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'This field is required';
-                          }
-                          if (value.length < 3) {
-                            return 'Invalid name';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      TextFormField(
-                        style: GoogleFonts.poppins(),
-                        decoration: InputDecoration(
-                          labelText: 'Next of Kin Address',
-                          labelStyle:
-                              GoogleFonts.poppins(color: Colors.grey[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF2A81C9), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.04,
-                              vertical: size.height * 0.02),
-                        ),
-                        onSaved: (value) {
-                          nokAddress = (value ?? userDataProfile.nok_address)!;
-                        },
-                        initialValue: userDataProfile.nok_address,
-                      ),
-                      SizedBox(height: size.height * 0.02),
-                      TextFormField(
-                        style: GoogleFonts.poppins(),
-                        decoration: InputDecoration(
-                          labelText: 'Next of Kin Phone Number',
-                          labelStyle:
-                              GoogleFonts.poppins(color: Colors.grey[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF2A81C9), width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.04,
-                              vertical: size.height * 0.02),
-                        ),
-                        onSaved: (value) {
-                          nokPhoneNo = (value ?? userDataProfile.nok_phone_no)!;
-                        },
-                        initialValue: userDataProfile.nok_phone_no,
-                      ),
-                      SizedBox(height: size.height * 0.03),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2A81C9),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            vertical: size.height * 0.02,
-                          ),
-                        ),
-                        onPressed: () {
-                          final accountID =
-                              accountTypes[selectedAccountType]['id'];
-                          _submitForm(accountID);
-                        },
-                        child: Text(
-                          'Update Profile',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: size.height * 0.018,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: size.height * 0.03),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-        return const Scaffold(
-          body: Center(
-            child: Text('An error occurred'),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _selectDate(
-      BuildContext context, TextEditingController controller) async {
-    DateTime currentDate = DateTime.now();
-    DateTime eighteenYearsAgo =
-        currentDate.subtract(const Duration(days: 18 * 365));
-
-    final DateTime? picked = await showDatePicker(
-        context: context,
-        //initial date starts from date.now minus 18 years
-        initialDate: DateTime(eighteenYearsAgo.year, eighteenYearsAgo.month,
-            eighteenYearsAgo.day),
-        firstDate: DateTime(1920),
-        lastDate: DateTime(2101),
-        //selectable date starts from date.now minus 18 years
-        selectableDayPredicate: (DateTime date) => date.isBefore(
-            currentDate.subtract(const Duration(days: 18 * 365 - 1))));
-    if (picked != null) {
-      // Update the selected date in the text field
-      final formattedDate = DateFormat('yyyy-MM-dd').format(picked);
-      setState(() {
-        controller.text = formattedDate;
-      });
-    }
-  }
-
-  void _submitForm(selectedAccountTypeId) {
+  void _submitForm() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      // Call the function to send data to the API
-      sendUserDataToApi(selectedAccountTypeId);
+      sendUserDataToApi();
     }
   }
 
-  void sendUserDataToApi(selectedAccountTypeId) async {
+  void sendUserDataToApi() async {
     UserData? userData = Provider.of<UserProvider>(context, listen: false).user;
-    final userId = userData?.id; // Replace with your actual user ID
+    final userId = userData?.id;
 
     final apiUrl = Uri.parse('${AppEndpoints.baseUrl}/profile/$userId');
 
-    // Create a map of the data to send
     final userDataMap = {
       'name': name,
       'gender': gender,
-      'dob': dob,
+      'dob': _dateController.text,
       'membership_number': membershipNumber,
       'address': address,
-      'phone_no': phoneNo,
-      'alt_phone_no': altPhoneNo,
+      'phone_no': phoneNo.replaceAll(' ', ''),
+      'alt_phone_no': altPhoneNo.replaceAll(' ', ''),
       'nok_name': nokName,
       'nok_email': nokAddress,
       'nok_phone_no': nokPhoneNo,
-      'account_type_id': real_selected_id
+      'account_type_id': selectedAccountType['id']
     };
 
     try {
@@ -852,22 +569,18 @@ class _EditProfileState extends State<EditProfile> {
           'Authorization': 'Bearer ${userData?.token}'
         },
       );
-      const CircleAvatar();
-      if (response.statusCode == 200) {
-        // Handle a successful API response
-        const CircleAvatar();
-        showBottomNotification('Profile information updated successfully');
-        Navigator.push(context,
-            MaterialPageRoute(builder: ((context) => const ProfileScreen())));
 
+      if (response.statusCode == 200) {
+        showBottomNotification('Profile information updated successfully');
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: ((context) => const ProfileScreen())));
         Provider.of<UserProvider>(context, listen: false)
             .setProfileStatus(false);
       } else {
-        // Handle errors or unsuccessful response
         showBottomNotification('Update failed, please try again');
       }
     } catch (error) {
-      // Handle network errors or exceptions
+      showBottomNotification('An error occurred, please try again');
     }
   }
 
@@ -881,37 +594,11 @@ class _EditProfileState extends State<EditProfile> {
     );
   }
 
-  //check if the person is 18 years and above
   bool isEighteenYearsAndAbove(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
     const daysPerYear = 365.25;
     final years = (difference / daysPerYear).floor();
     return years >= 18;
-  }
-
-  String padPhoneNumber(phoneNumberWithoutSpaces) {
-    if (phoneNumberWithoutSpaces == "") {
-      return "";
-    }
-
-    //check the length of the phone number, if it has 10 characters, add +256 at the beginning
-    if (phoneNumberWithoutSpaces.length == 10) {
-      phoneNumberWithoutSpaces = '+256$phoneNumberWithoutSpaces';
-    }
-
-    if (phoneNumberWithoutSpaces.length != 13) {
-      return "";
-    }
-
-    //check if the second character is +
-    if (phoneNumberWithoutSpaces[1] == '+') {
-      //remove it
-      phoneNumberWithoutSpaces = phoneNumberWithoutSpaces.substring(2);
-    }
-
-    String formattedPhoneNumber =
-        '${phoneNumberWithoutSpaces.substring(0, 4)} ${phoneNumberWithoutSpaces.substring(4, 7)} ${phoneNumberWithoutSpaces.substring(7, 10)} ${phoneNumberWithoutSpaces.substring(10)}';
-    return formattedPhoneNumber;
   }
 }

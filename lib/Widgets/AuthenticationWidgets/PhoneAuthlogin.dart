@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:ippu/Util/PhoneNumberFormatter%20.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
@@ -18,69 +19,82 @@ class _WelcomeState extends State<PhoneAuthLogin> {
   late final Rx<User?> firebaseUser;
   var verificationId = ''.obs;
   var OTPCode;
-  bool isLoading = false; // Variable to control the visibility of the spinner
+  bool isLoading = false;
 
   TextEditingController phoneNumber = TextEditingController(text: '+256');
   TextEditingController otp = TextEditingController();
 
   @override
-  @override
   void initState() {
     super.initState();
-    // Check if phoneNumber is provided and initialize the controller
     if (widget.phoneNumber != null) {
-      // Remove spaces from the phone number
       String phoneNumberWithoutSpaces = widget.phoneNumber!.replaceAll(' ', '');
-
-      // Format the phone number as desired "+256 700 000 000"
       String formattedPhoneNumber =
           '${phoneNumberWithoutSpaces.substring(0, 4)} ${phoneNumberWithoutSpaces.substring(4, 7)} ${phoneNumberWithoutSpaces.substring(7, 10)} ${phoneNumberWithoutSpaces.substring(10)}';
-
-      // Set the formatted phone number to the controller
       phoneNumber.text = formattedPhoneNumber;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "LOGIN",
-          style: TextStyle(color: Colors.white),
+        backgroundColor: const Color(0xFF2A81C9),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
         ),
-        centerTitle: true,
-        backgroundColor: Colors.blue, // Set app bar background color
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 20),
-          Center(
-            child: Column(
-              mainAxisAlignment:
-                  MainAxisAlignment.center, // Center content vertically
-              crossAxisAlignment:
-                  CrossAxisAlignment.center, // Center content horizontally
-              children: [
-                const SizedBox(height: 20),
-                //Enter 6 digit code sent to your phone
-                const Text(
-                  "Enter phone number registered with IPPU Membership APP(eg. +256 700 000 000)",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 15,
+      body: Container(
+        height: size.height,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF2A81C9), Color(0xFF1E5F94)],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: size.width * 0.08),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: size.height * 0.18),
+                  Text(
+                    "Phone Login",
+                    style: GoogleFonts.poppins(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center, // Center text
-                ),
-                const SizedBox(height: 20),
-                inputTextField("Phone Number", phoneNumber, context),
-                const SizedBox(height: 20),
-                SendOTPButton("NEXT"),
-              ],
+                  SizedBox(height: size.height * 0.05),
+                  Text(
+                    "Enter your registered phone number\n(Format: +256 75xxxxxxx)",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: size.height * 0.06),
+                  inputTextField("Phone Number", phoneNumber, context),
+                  SizedBox(height: size.height * 0.06),
+                  SendOTPButton("SEND OTP"),
+                ],
+              ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -89,57 +103,72 @@ class _WelcomeState extends State<PhoneAuthLogin> {
         onPressed: isLoading
             ? null
             : () async {
-                //get the phone number and remove all spaces
                 String formattedPhoneNumber =
                     phoneNumber.text.replaceAll(' ', '');
                 await phoneAuthentication(formattedPhoneNumber);
               },
-        style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(
-              Colors.blue), // Set button background color to blue
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
         ),
         child: isLoading
-            ? const Text("loading........")
+            ? const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2A81C9)),
+              )
             : Text(
                 text,
-                style: const TextStyle(
-                    color: Colors.white), // Set text color to white
+                style: GoogleFonts.poppins(
+                  color: Color(0xFF2A81C9),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
       );
 
   Widget inputTextField(String labelText,
           TextEditingController textEditingController, BuildContext context) =>
-      Padding(
-        padding: const EdgeInsets.all(2.00),
-        child: SizedBox(
-            child: TextFormField(
-          controller: textEditingController,
-          inputFormatters: [PhoneNumberFormatter()],
-          enabled: !isLoading,
-          //set keyboard type to phone
-          keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            labelText: labelText,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+      TextFormField(
+        controller: textEditingController,
+        inputFormatters: [PhoneNumberFormatter()],
+        enabled: !isLoading,
+        keyboardType: TextInputType.phone,
+        style: GoogleFonts.poppins(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: labelText,
+          labelStyle: GoogleFonts.poppins(color: Colors.white.withOpacity(0.8)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your phone number.';
-            }
-            // You can add more validation here if needed
-            return null;
-          },
-          onSaved: (value) {},
-        )),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.1),
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your phone number.';
+          }
+          return null;
+        },
+        onSaved: (value) {},
       );
 
   Future<void> phoneAuthentication(String phoneNo) async {
     if (mounted) {
       setState(() {
-        isLoading = true; // Set isLoading to true when authentication starts
+        isLoading = true;
       });
     }
-    //check if phone number is valid
     var isPhoneValid = await checkPhoneNumber(phoneNo);
 
     if (isPhoneValid) {
@@ -147,7 +176,6 @@ class _WelcomeState extends State<PhoneAuthLogin> {
         await _auth.verifyPhoneNumber(
           phoneNumber: phoneNo,
           verificationCompleted: (PhoneAuthCredential credential) async {
-            //get the otp code
             OTPCode = credential.smsCode;
           },
           verificationFailed: (e) {
@@ -158,15 +186,13 @@ class _WelcomeState extends State<PhoneAuthLogin> {
             }
             if (mounted) {
               setState(() {
-                isLoading =
-                    false; // Set isLoading to false when authentication ends
+                isLoading = false;
               });
             }
           },
           codeSent: (verificationId, resendToken) async {
             this.verificationId.value = verificationId;
 
-            //Navigate Digitcode screen()
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -181,8 +207,7 @@ class _WelcomeState extends State<PhoneAuthLogin> {
 
             if (mounted) {
               setState(() {
-                isLoading =
-                    false; // Set isLoading to false when authentication ends
+                isLoading = false;
               });
             }
           },
@@ -190,8 +215,7 @@ class _WelcomeState extends State<PhoneAuthLogin> {
             this.verificationId.value = verificationId;
             if (mounted) {
               setState(() {
-                isLoading =
-                    false; // Set isLoading to false when authentication ends
+                isLoading = false;
               });
             }
           },
@@ -200,8 +224,7 @@ class _WelcomeState extends State<PhoneAuthLogin> {
         Get.snackbar('Error', 'Something went wrong. Try again');
         if (mounted) {
           setState(() {
-            isLoading =
-                false; // Set isLoading to false when authentication ends
+            isLoading = false;
           });
         }
       }
@@ -209,7 +232,7 @@ class _WelcomeState extends State<PhoneAuthLogin> {
       Get.snackbar('Error', 'Phone number not registered. Please register');
       if (mounted) {
         setState(() {
-          isLoading = false; // Set isLoading to false when authentication ends
+          isLoading = false;
         });
       }
     }
@@ -219,7 +242,6 @@ class _WelcomeState extends State<PhoneAuthLogin> {
     AuthController authController = AuthController();
 
     final response = await authController.checkPhoneNumber(phone);
-    //check if response status is success
     if (response['status'] == 'success') {
       return true;
     } else {

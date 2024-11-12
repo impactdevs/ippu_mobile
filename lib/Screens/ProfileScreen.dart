@@ -3,8 +3,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
 import 'package:ippu/Widgets/DrawerWidget/DrawerWidget.dart';
-import 'package:ippu/Widgets/ProfileWidgets/EditProfile.dart';
 import 'package:ippu/Widgets/ProfileWidgets/InformationScreen.dart';
+import 'package:ippu/Widgets/ProfileWidgets/membership.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -77,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               text: 'Bio data',
             ),
             Tab(
-              text: 'Edit Profile',
+              text: 'Membership Details',
             ),
           ],
           indicatorColor: Colors.white, // Set the underline color to white
@@ -107,9 +107,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Add content for Edit Profile tab here
-                EditProfile()
-                // EditUserProfile()
+                // Add content for Membership details tab here
+                MembershipForm()
               ],
             ),
           ),
