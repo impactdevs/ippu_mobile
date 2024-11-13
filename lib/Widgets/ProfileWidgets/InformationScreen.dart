@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:ippu/Providers/ProfilePicProvider.dart';
 import 'package:ippu/Providers/SubscriptionStatus.dart';
 import 'package:ippu/Util/app_endpoints.dart';
+import 'package:ippu/Widgets/ProfileWidgets/EditProfile.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/UserData.dart';
 import 'package:ippu/models/UserProvider.dart';
@@ -166,6 +167,51 @@ class _InformationScreenState extends State<InformationScreen> {
                           style: GoogleFonts.poppins(
                             fontSize: size.width * 0.035,
                             color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        SizedBox(height: size.height * 0.015),
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            horizontal: size.width * 0.1,
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      EditProfile(userData: profileData),
+                                ),
+                              );
+                            },
+                            icon: Icon(
+                              Icons.edit_outlined,
+                              color: Colors.blue[700],
+                              size: size.width * 0.045,
+                            ),
+                            label: Text(
+                              "Edit Profile",
+                              style: GoogleFonts.poppins(
+                                color: Colors.blue[700],
+                                fontSize: size.width * 0.035,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.blue[700],
+                              padding: EdgeInsets.symmetric(
+                                horizontal: size.width * 0.06,
+                                vertical: size.height * 0.015,
+                              ),
+                              elevation: 2,
+                              shadowColor: Colors.black.withOpacity(0.2),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(size.width * 0.035),
+                              ),
+                            ),
                           ),
                         ),
                         if (status == 'Approved') ...[
