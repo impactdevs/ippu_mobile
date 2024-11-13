@@ -67,6 +67,7 @@ dependencies:
   flutter_staggered_animations: ^1.1.1
   google_fonts: ^6.2.0
   carousel_slider: ^5.0.0
+  infobip_mobilemessaging: '^6.1.0'
 dev_dependencies:
   flutter_test:
     sdk: flutter

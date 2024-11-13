@@ -253,6 +253,7 @@ class _ContainerDisplayingCommunicationsState
 
   Future<List<CommunicationModel>> getAllCommunications() async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
+    print("user id: ${userData?.id}");
 
     // Define the URL with userData.id
     final apiUrl = '$baseUrl/communications/${userData?.id}';
@@ -265,6 +266,7 @@ class _ContainerDisplayingCommunicationsState
     try {
       final response = await http.get(Uri.parse(apiUrl), headers: headers);
       if (response.statusCode == 200) {
+        print(response.body);
         final Map<String, dynamic> jsonData = jsonDecode(response.body);
         final List<dynamic> eventData = jsonData['data'].values.toList();
         List<CommunicationModel> eventsData = eventData.map((item) {
@@ -278,9 +280,12 @@ class _ContainerDisplayingCommunicationsState
         }).toList();
         return eventsData;
       } else {
+        //get the exception message
+        print(response.body);
         throw Exception('Failed to load events data');
       }
     } catch (error) {
+      print('Error: $error');
       // Handle the error here, e.g., display an error message to the user
       return []; // Return an empty list or handle the error in your UI
     }

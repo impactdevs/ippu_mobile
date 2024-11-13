@@ -1,8 +1,8 @@
 class AppEndpoints {
-  static const String baseUrl = 'https://staging.ippu.org/api';
-  static const String baseImageUrl = 'https://staging.ippu.org/storage';
-  static const String flutterWaveRedirect = 'https://staging.ippu.org/login';
-  static const String deepLink = 'https://staging.ippu.org/myevents';
+  static const String baseUrl = 'https://ippu.org/api';
+  static const String baseImageUrl = 'https://ippu.org/storage';
+  static const String flutterWaveRedirect = 'https://ippu.org/login';
+  static const String deepLink = 'https://ippu.org/myevents';
 
   static const String loginEndPoint = "/login";
   static const String regiserEndPoint = "/register";

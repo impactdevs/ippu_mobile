@@ -768,6 +768,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1+1"
+  infobip_mobilemessaging:
+    dependency: "direct main"
+    description:
+      name: infobip_mobilemessaging
+      sha256: "363b733f603c966bc8647eba5bf7dfb8c5de2136bfd9aff74b74b20728d8badb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.7.0"
   intl:
     dependency: "direct main"
     description:
