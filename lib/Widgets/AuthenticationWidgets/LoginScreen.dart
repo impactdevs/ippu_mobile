@@ -321,10 +321,45 @@ class _LoginScreenState extends State<LoginScreen> {
               )
             else
               SignInWithAppleButton(
-                onPressed: () async {
-                  // Implement Apple Sign In logic here
-                },
                 style: SignInWithAppleButtonStyle.white,
+                onPressed: () async {
+                  final credential = await SignInWithApple.getAppleIDCredential(
+                    scopes: [
+                      AppleIDAuthorizationScopes.email,
+                      AppleIDAuthorizationScopes.fullName,
+                    ],
+                  );
+                  var firstName = "";
+                  var lastName = "";
+                  if (credential.givenName != null) {
+                    firstName = "${credential.givenName}";
+                  }
+                  if (credential.familyName != null) {
+                    lastName = "${credential.familyName}";
+                  }
+
+                  var fullName = "$firstName $lastName";
+
+                  final authController = AuthController();
+                  bool response = await authController
+                      .authenticateWithAppleEmail(
+                          {"email": credential.email!, "fullName": fullName});
+
+                  if (response) {
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (context) {
+                      //save the fcm token to the database
+                      return const DefaultScreen();
+                    }));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            "Something went wrong. Please try again later."),
+                      ),
+                    );
+                  }
+                },
               ),
           ],
         ),
