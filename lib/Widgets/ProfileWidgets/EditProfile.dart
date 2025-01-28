@@ -14,6 +14,7 @@ import 'package:ippu/models/UserData.dart';
 import 'dart:io';
 import 'package:ippu/models/UserProvider.dart';
 import 'package:provider/provider.dart';
+import 'dart:developer';
 
 class EditProfile extends StatefulWidget {
   final UserData userData;
@@ -63,6 +64,7 @@ class _EditProfileState extends State<EditProfile> {
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
+      log("Account types: $jsonData");
 
       if (jsonData.containsKey('data')) {
         final data = jsonData['data'] as List<dynamic>;
@@ -107,6 +109,9 @@ class _EditProfileState extends State<EditProfile> {
     nokAddress = widget.userData.nok_address ?? '';
     nokPhoneNo = widget.userData.nok_phone_no ?? '';
     accountId = widget.userData.account_type_id ?? 3;
+
+    log("Account Details: ${widget.userData}");
+
 
     _dateController.text = dob;
     isMale = gender == 'male';
@@ -437,10 +442,13 @@ class _EditProfileState extends State<EditProfile> {
               ))
           .toList(),
       onChanged: (value) {
-        setState(() {
-          selectedAccountType = _accountTypes[
-              _accountTypes.indexWhere((type) => type['id'] == value)];
-        });
+           setState(() {
+        // Update the global selectedAccountType value when dropdown value changes
+        selectedAccountType = _accountTypes[
+            _accountTypes.indexWhere((type) => type['id'] == value)];
+        accountId = value ?? accountId; // Update the accountId if needed
+        log("Selected account type: $selectedAccountType");
+      });
       },
       validator: (value) {
         if (value == null) {
@@ -560,6 +568,8 @@ class _EditProfileState extends State<EditProfile> {
     final userId = userData?.id;
 
     final apiUrl = Uri.parse('${AppEndpoints.baseUrl}/profile/$userId');
+
+    log("account type id: ${selectedAccountType['id']}");
 
     final userDataMap = {
       'name': name,

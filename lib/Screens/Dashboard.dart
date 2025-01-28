@@ -83,7 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         throw Exception('Failed to load events data');
       }
     } catch (error) {
-      log('Error fetching job data: $error');
+      // log('Error fetching job data: $error');
       return [];
     }
   }
@@ -145,7 +145,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
     } catch (e) {
-      log('Error fetching data: $e');
+      // log('Error fetching data: $e');
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -1123,6 +1123,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             () {
               final userData =
                   Provider.of<UserProvider>(context, listen: false).user;
+                  log("User Data->fullName: ${userData!.name}, email: ${userData.email}, phone: ${userData.phone_no}, membershipAmount: ${userData.membership_amount}");
               if (userData!.membership_amount == '0') {
                 showDialog(
                   context: context,

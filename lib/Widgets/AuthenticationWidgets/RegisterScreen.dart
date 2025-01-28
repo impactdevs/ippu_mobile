@@ -44,8 +44,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<List<Map<String, dynamic>>> _fetchAccountTypes() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AppEndpoints.baseUrl}/api/account-types'));
+      final response =
+          await http.get(Uri.parse('${AppEndpoints.baseUrl}/account-types'));
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         if (jsonData['data'] is List && (jsonData['data'] as List).isNotEmpty) {

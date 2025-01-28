@@ -53,12 +53,12 @@ class AuthController {
   }
 
   Future<Map<String, dynamic>> signIn(String email, String password) async {
+    log("email: $email, password: $password");
     final dio = Dio();
     final client = AuthRestClient(dio);
     try {
       Map<String, String> user = {"email": email, "password": password};
       final response = await client.signIn(body: user);
-
       if (response.containsKey('authorization') &&
           response['authorization'].containsKey('token')) {
         final accessToken = response['authorization']['token'];
@@ -545,7 +545,7 @@ class AuthController {
         return false;
       }
     } on Exception catch (e) {
-      log('Failed to login with Google: $e');
+      // log('Failed to login with Google: $e');
       // TODO
       return false;
     }
@@ -574,7 +574,7 @@ class AuthController {
         return false;
       }
     } catch (e) {
-      log('Failed to login with Apple: $e');
+      // log('Failed to login with Apple: $e');
       return false;
     }
   }

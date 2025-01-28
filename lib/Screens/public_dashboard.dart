@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:developer';
+// import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -54,7 +54,7 @@ class _PublicDashboardScreenState extends State<PublicDashboardScreen> {
         throw Exception('Failed to load jobs data');
       }
     } catch (error) {
-      log('Error fetching job data: $error');
+      // log('Error fetching job data: $error');
       return [];
     }
   }

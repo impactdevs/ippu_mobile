@@ -90,6 +90,7 @@ class _InformationScreenState extends State<InformationScreen> {
                     : userData['latest_membership']["expiry_date"],
             profile_pic: userData['profile_pic'] ??
                 "https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes-thumbnail.png",
+                account_type_id: userData['account_type_id'] ?? "",
           );
 
           return profile;
