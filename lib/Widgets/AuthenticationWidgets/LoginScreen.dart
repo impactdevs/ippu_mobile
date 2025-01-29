@@ -289,78 +289,84 @@ class _LoginScreenState extends State<LoginScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildSocialButton(
-              "assets/google.svg",
-              "Google",
-              () async {
-                setState(() => _isSigningIn = true);
-                try {
-                  final response = await AuthController().signInWithGoogle();
-                  if (!mounted) return;
-                  if (response) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const DefaultScreen()),
-                    );
-                  } else {
-                    _showErrorSnackBar(
-                        "Google Sign In failed. Please try again.");
-                  }
-                } finally {
-                  if (mounted) setState(() => _isSigningIn = false);
-                }
-              },
-            ),
-            const SizedBox(width: 16),
             if (Platform.isAndroid)
               _buildSocialButton(
-                null,
-                "Phone",
-                () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const PhoneAuthLogin())),
-              )
-            else
-              SignInWithAppleButton(
-                style: SignInWithAppleButtonStyle.white,
-                onPressed: () async {
-                  final credential = await SignInWithApple.getAppleIDCredential(
-                    scopes: [
-                      AppleIDAuthorizationScopes.email,
-                      AppleIDAuthorizationScopes.fullName,
-                    ],
-                  );
-                  var firstName = "";
-                  var lastName = "";
-                  if (credential.givenName != null) {
-                    firstName = "${credential.givenName}";
-                  }
-                  if (credential.familyName != null) {
-                    lastName = "${credential.familyName}";
-                  }
-
-                  var fullName = "$firstName $lastName";
-
-                  final authController = AuthController();
-                  bool response = await authController
-                      .authenticateWithAppleEmail(
-                          {"email": credential.email!, "fullName": fullName});
-
-                  if (response) {
-                    Navigator.pushReplacement(context,
-                        MaterialPageRoute(builder: (context) {
-                      //save the fcm token to the database
-                      return const DefaultScreen();
-                    }));
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            "Something went wrong. Please try again later."),
-                      ),
-                    );
+                "assets/google.svg",
+                "Google",
+                () async {
+                  setState(() => _isSigningIn = true);
+                  try {
+                    final response = await AuthController().signInWithGoogle();
+                    if (!mounted) return;
+                    if (response) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const DefaultScreen()),
+                      );
+                    } else {
+                      _showErrorSnackBar(
+                          "Google Sign In failed. Please try again.");
+                    }
+                  } finally {
+                    if (mounted) setState(() => _isSigningIn = false);
                   }
                 },
+              )
+            else
+              SizedBox(
+                width: size.width * 0.5,
+                height: size.height * 0.06,
+                child: SignInWithAppleButton(
+                  style: SignInWithAppleButtonStyle.white,
+                  onPressed: () async {
+                    final credential =
+                        await SignInWithApple.getAppleIDCredential(
+                      scopes: [
+                        AppleIDAuthorizationScopes.email,
+                        AppleIDAuthorizationScopes.fullName,
+                      ],
+                    );
+                    var firstName = "";
+                    var lastName = "";
+                    if (credential.givenName != null) {
+                      firstName = "${credential.givenName}";
+                    }
+                    if (credential.familyName != null) {
+                      lastName = "${credential.familyName}";
+                    }
+
+                    var fullName = "$firstName $lastName";
+
+                    final authController = AuthController();
+                    bool response = await authController
+                        .authenticateWithAppleEmail(
+                            {"email": credential.email!, "fullName": fullName});
+
+                    if (response) {
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (context) {
+                        //save the fcm token to the database
+                        return const DefaultScreen();
+                      }));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              "Something went wrong. Please try again later."),
+                        ),
+                      );
+                    }
+                  },
+                ),
               ),
+            const SizedBox(width: 16),
+            _buildSocialButton(
+              null,
+              "Phone",
+              () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const PhoneAuthLogin())),
+            )
           ],
         ),
       ],
