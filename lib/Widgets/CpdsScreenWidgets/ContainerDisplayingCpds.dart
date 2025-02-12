@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:ippu/models/CpdModel.dart';
 import 'package:ippu/models/UserProvider.dart';
 import 'package:provider/provider.dart';
-
+import 'dart:developer';
 class ContainerDisplayingCpds extends StatefulWidget {
   const ContainerDisplayingCpds({super.key});
 
@@ -89,6 +89,7 @@ class _ContainerDisplayingCpdsState extends State<ContainerDisplayingCpds>
             banner: item['banner'] ?? "",
             attendance_request: item['attendance_request'] ?? "",
             attendance_status: item['attendance_status'] ?? "",
+            balance: item['balance'].toString(),
           );
         }).toList();
         cpdData.sort((a, b) => b.startDate.compareTo(a.startDate));
@@ -97,6 +98,7 @@ class _ContainerDisplayingCpdsState extends State<ContainerDisplayingCpds>
         throw Exception('Failed to load events data');
       }
     } catch (error) {
+      log("error loading cpds: $error");
       return [];
     }
   }
@@ -227,6 +229,7 @@ class _ContainerDisplayingCpdsState extends State<ContainerDisplayingCpds>
                                     normal_rate: item.normalRate,
                                     member_rate: item.membersRate,
                                     location: item.location,
+                                    balance: item.balance,
                                   );
                                 }),
                               ).then((value) {

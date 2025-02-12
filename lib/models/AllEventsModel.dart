@@ -11,6 +11,7 @@ class AllEventsModel {
   bool attandence_request;
   String status;
  String normal_rate; 
+ String?  balance;
 
   AllEventsModel({
     required this.id,
@@ -25,6 +26,7 @@ class AllEventsModel {
     required this.details,
     required this.status,
     required this.normal_rate,
+    this.balance,
   });
 
   String getStatus() {

@@ -5,6 +5,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutterwave_standard/flutterwave.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/UserData.dart';
@@ -26,6 +27,7 @@ class SingleEventDisplay extends StatefulWidget {
   final String id;
   final bool attendance_request;
   final String description;
+  final String? balance;
 
   const SingleEventDisplay(
       {required this.attendance_request,
@@ -37,7 +39,8 @@ class SingleEventDisplay extends StatefulWidget {
       required this.eventName,
       required this.imagelink,
       required this.member_rate,
-      required this.normal_rate});
+      required this.normal_rate,
+      this.balance});
 
   @override
   State<SingleEventDisplay> createState() => _SingleEventDisplayState();
@@ -357,21 +360,73 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
                                   color: Colors.green,
                                 ),
                               );
-                            case 9:
-                              return Text(
-                                attendance_status,
-                                style: GoogleFonts.lato(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
+                            case 8:
+                            case 10:
+                            case 12:
+                            case 14:
+                              return ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  padding: EdgeInsets.all(size.height * 0.024),
+                                ),
+                                onPressed: () {
+                                  // _handlePaymentInitialization(profileData.name,
+                                  //     profileData.email, profileData.phone_no!);
+                                  _showPaymentDialog(size, profile);
+                                },
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: size.width * 0.12),
+                                  child: Text(
+                                    'Pay Balance(UGX ${NumberFormat('#,###').format(widget.balance)})',
+                                    style: GoogleFonts.lato(
+                                      textStyle: const TextStyle(
+                                        color: Colors
+                                            .white, // Set text color to white
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               );
-                            case 10:
-                              return Text(
-                                attendance_status,
-                                style: GoogleFonts.lato(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
+                            case 15:
+                            case 16:
+                            case 17:
+                            case 18:
+                              //return the attendance status together with pay booking fee
+                              return Column(
+                                children: [
+                                  Text(
+                                    attendance_status,
+                                    style: GoogleFonts.lato(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                      padding:
+                                          EdgeInsets.all(size.height * 0.024),
+                                    ),
+                                    onPressed: () {
+                                      // _handlePaymentInitialization(profileData.name,
+                                      //     profileData.email, profileData.phone_no!);
+                                      _showPaymentDialog(size, profile);
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: size.width * 0.12),
+                                      child: Text(
+                                        'Pay Booking Fee',
+                                        style: GoogleFonts.lato(
+                                          textStyle: const TextStyle(
+                                              color: Colors
+                                                  .white), // Set text color to white
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               );
                             default:
                               return Container();
@@ -450,8 +505,8 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
             ElevatedButton(
               onPressed: () {
                 // Trigger the Flutterwave payment process
-                _handlePaymentInitialization(
-                    profile.name, profile.email, profile.phone_no.toString());
+                _handlePaymentInitialization(profile.name, profile.email,
+                    profile.phone_no.toString(), _amountController.text);
               },
               child: const Text('Pay'),
             ),
@@ -497,22 +552,96 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
       if (currentDate.isAfter(endDate)) {
         attendance_status = "Thank you For Attending the Event";
         statusCode = 6;
-      } else if (currentDate.isBefore(startDate)) {
-        attendance_status = "Already Registered to attend";
-        statusCode = 7;
-      } else if (currentDate.isAfter(startDate) &&
-          currentDate.isBefore(endDate)) {
-        attendance_status =
-            "Thank you for registering for the event, it is happening now";
-        statusCode = 8;
-      } else if (currentDate.isAtSameMomentAs(startDate)) {
-        attendance_status =
-            "Thank you for registering for the event, it is happening now";
-        statusCode = 9;
-      } else if (currentDate.isAtSameMomentAs(endDate)) {
-        attendance_status =
-            "Thank you for registering for the event, it is happening now";
-        statusCode = 10;
+      }
+
+      if (widget.balance != "null") {
+        if (currentDate.isBefore(startDate) &&
+            (double.parse(widget.balance!) == 0)) {
+          {
+            attendance_status = "Already booked to attend the event";
+            statusCode = 7;
+          }
+        }
+
+        if (currentDate.isBefore(startDate) &&
+            (double.parse(widget.balance!) > 0)) {
+          {
+            // attendance_status = "Already booked to attend the cpd";
+            statusCode = 8;
+          }
+        }
+
+        if (currentDate.isAfter(startDate) &&
+            currentDate.isBefore(endDate) &&
+            (double.parse(widget.balance!) == 0)) {
+          attendance_status =
+              "Thank you for registering for the event, it is happening now";
+          statusCode = 9;
+        }
+
+        if (currentDate.isAfter(startDate) &&
+            currentDate.isBefore(endDate) &&
+            (double.parse(widget.balance!) > 0)) {
+          // attendance_status =
+          //     "Thank you for registering for the cpd, it is happening now";
+          statusCode = 10;
+        }
+
+        //check if the date is at the same momement
+        if (currentDate.isAtSameMomentAs(startDate) &&
+            (double.parse(widget.balance!) == 0)) {
+          attendance_status =
+              "Thank you for registering for the event, it is happening now";
+          statusCode = 11;
+        }
+
+        //check if the date is at the same momement
+        if (currentDate.isAtSameMomentAs(startDate) &&
+            (double.parse(widget.balance!) > 0)) {
+          // attendance_status =
+          //     "Thank you for registering for the cpd, it is happening now";
+          statusCode = 12;
+        }
+
+        if (currentDate.isAtSameMomentAs(endDate) &&
+            (double.parse(widget.balance!) == 0)) {
+          attendance_status =
+              "Thank you for registering for the event, it is happening now";
+          statusCode = 13;
+        }
+
+        if (currentDate.isAtSameMomentAs(endDate) &&
+            (double.parse(widget.balance!) > 0)) {
+          // attendance_status =
+          //     "Thank you for registering for the cpd, it is happening now";
+          statusCode = 14;
+        }
+      } else {
+        if (currentDate.isBefore(startDate)) {
+          {
+            attendance_status = "Already booked to attend the event";
+            statusCode = 15;
+          }
+        }
+
+        if (currentDate.isAfter(startDate) && currentDate.isBefore(endDate)) {
+          attendance_status =
+              "Thank you for registering for the event, it is happening now";
+          statusCode = 16;
+        }
+
+        //check if the date is at the same momement
+        if (currentDate.isAtSameMomentAs(startDate)) {
+          attendance_status =
+              "Thank you for registering for the event, it is happening now";
+          statusCode = 17;
+        }
+
+        if (currentDate.isAtSameMomentAs(endDate)) {
+          attendance_status =
+              "Thank you for registering for the event, it is happening now";
+          statusCode = 18;
+        }
       }
     }
 
@@ -520,7 +649,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
   }
 
   _handlePaymentInitialization(
-      String fullName, String email, String phoneNumber) async {
+      String fullName, String email, String phoneNumber, String amount) async {
     final Customer customer = Customer(
       name: fullName,
       phoneNumber: phoneNumber,
@@ -533,7 +662,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
         currency: "UGX",
         redirectUrl: AppEndpoints.flutterWaveRedirect,
         txRef: const Uuid().v1(),
-        amount: isMember() ? widget.member_rate : widget.normal_rate,
+        amount: amount,
         customer: customer,
         paymentOptions: "card, payattitude, barter, bank transfer, ussd",
         customization: Customization(
@@ -546,12 +675,12 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
     String message;
     if (response.success == true) {
       message = "Payment successful,\n thank you!";
-      sendAttendanceRequest(widget.id);
+      sendAttendanceRequest(widget.id, amount);
     } else {
       message = "Payment failed,\n try again later";
     }
     showLoading(message);
-
+    Navigator.pop(context);
     print("${response.toJson()}");
   }
 
@@ -575,7 +704,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
     );
   }
 
-  void sendAttendanceRequest(String cpdID) async {
+  void sendAttendanceRequest(String cpdID, [amount = Null]) async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
     final userId = userData?.id; // Replace with your actual user ID
 
@@ -585,6 +714,7 @@ class _SingleEventDisplayState extends State<SingleEventDisplay> {
     final Map<String, dynamic> requestBody = {
       'user_id': userId,
       'event_id': cpdID,
+      'amount': amount,
     };
 
     try {

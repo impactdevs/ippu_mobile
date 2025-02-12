@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:clean_dialog/clean_dialog.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +6,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutterwave_standard/flutterwave.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:ippu/Util/app_endpoints.dart';
 import 'package:ippu/controllers/auth_controller.dart';
 import 'package:ippu/models/UserData.dart';
@@ -16,6 +16,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 import 'package:ippu/env.dart' as env;
+
+// import dart:developer to use the log function
+import 'dart:developer';
 
 class CpdsSingleEventDisplay extends StatefulWidget {
   final String imagelink;
@@ -32,6 +35,7 @@ class CpdsSingleEventDisplay extends StatefulWidget {
   final String target_group;
   final String normal_rate;
   final String member_rate;
+  final String? balance;
   const CpdsSingleEventDisplay(
       {super.key,
       required this.attendance_request,
@@ -47,7 +51,8 @@ class CpdsSingleEventDisplay extends StatefulWidget {
       required this.cpdsname,
       required this.imagelink,
       required this.normal_rate,
-      required this.member_rate});
+      required this.member_rate,
+      this.balance});
 
   @override
   State<CpdsSingleEventDisplay> createState() => _CpdsSingleEventDisplayState();
@@ -401,14 +406,6 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
                                   color: Colors.red,
                                 ),
                               );
-                            case 8:
-                              return Text(
-                                attendance_status,
-                                style: GoogleFonts.lato(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
-                              );
                             case 9:
                               return Text(
                                 attendance_status,
@@ -417,13 +414,72 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
                                   color: Colors.green,
                                 ),
                               );
+                            case 8:
                             case 10:
-                              return Text(
-                                attendance_status,
-                                style: GoogleFonts.lato(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
+                            case 12:
+                            case 14:
+                              return ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  padding: EdgeInsets.all(size.height * 0.024),
                                 ),
+                                onPressed: () {
+                                  // _handlePaymentInitialization(profileData.name,
+                                  //     profileData.email, profileData.phone_no!);
+                                  _showPaymentDialog(size, profileData);
+                                },
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: size.width * 0.12),
+                                  child: Text(
+                                    'Pay Balance(UGX ${NumberFormat('#,###').format(int.parse(widget.balance??""))})',
+                                    style: GoogleFonts.lato(
+                                      textStyle: const TextStyle(
+                                          color: Colors
+                                              .white), // Set text color to white
+                                    ),
+                                  ),
+                                ),
+                              );
+                            case 15:
+                            case 16:
+                            case 17:
+                            case 18:
+                              //return the attendance status together with pay booking fee
+                              return Column(
+                                children: [
+                                  Text(
+                                    attendance_status,
+                                    style: GoogleFonts.lato(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                      padding:
+                                          EdgeInsets.all(size.height * 0.024),
+                                    ),
+                                    onPressed: () {
+                                      // _handlePaymentInitialization(profileData.name,
+                                      //     profileData.email, profileData.phone_no!);
+                                      _showPaymentDialog(size, profileData);
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: size.width * 0.12),
+                                      child: Text(
+                                        'Pay Booking Fee',
+                                        style: GoogleFonts.lato(
+                                          textStyle: const TextStyle(
+                                              color: Colors
+                                                  .white), // Set text color to white
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               );
                             default:
                               return Container(); // Handle other cases if needed
@@ -505,8 +561,8 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
             ElevatedButton(
               onPressed: () {
                 // Trigger the Flutterwave payment process
-                _handlePaymentInitialization(
-                    profile.name, profile.email, profile.phone_no.toString());
+                _handlePaymentInitialization(profile.name, profile.email,
+                    profile.phone_no.toString(), _amountController.text);
               },
               child: const Text('Pay'),
             ),
@@ -569,31 +625,94 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
         attendance_status = "Thank you For Attending the cpd";
         statusCode = 6;
       }
-
-      if (currentDate.isBefore(startDate)) {
-        {
-          attendance_status = "Already booked to attend the cpd";
-          statusCode = 7;
+      if (widget.balance != "null") {
+        if (currentDate.isBefore(startDate) &&
+            (double.parse(widget.balance!) == 0)) {
+          {
+            attendance_status = "Already booked to attend the cpd";
+            statusCode = 7;
+          }
         }
-      }
 
-      if (currentDate.isAfter(startDate) && currentDate.isBefore(endDate)) {
-        attendance_status =
-            "Thank you for registering for the cpd, it is happening now";
-        statusCode = 8;
-      }
+        if (currentDate.isBefore(startDate) &&
+            (double.parse(widget.balance!) > 0)) {
+          {
+            // attendance_status = "Already booked to attend the cpd";
+            statusCode = 8;
+          }
+        }
 
-      //check if the date is at the same momement
-      if (currentDate.isAtSameMomentAs(startDate)) {
-        attendance_status =
-            "Thank you for registering for the cpd, it is happening now";
-        statusCode = 9;
-      }
+        if (currentDate.isAfter(startDate) &&
+            currentDate.isBefore(endDate) &&
+            (double.parse(widget.balance!) == 0)) {
+          attendance_status =
+              "Thank you for registering for the cpd, it is happening now";
+          statusCode = 9;
+        }
 
-      if (currentDate.isAtSameMomentAs(endDate)) {
-        attendance_status =
-            "Thank you for registering for the cpd, it is happening now";
-        statusCode = 10;
+        if (currentDate.isAfter(startDate) &&
+            currentDate.isBefore(endDate) &&
+            (double.parse(widget.balance!) > 0)) {
+          // attendance_status =
+          //     "Thank you for registering for the cpd, it is happening now";
+          statusCode = 10;
+        }
+
+        //check if the date is at the same momement
+        if (currentDate.isAtSameMomentAs(startDate) &&
+            (double.parse(widget.balance!) == 0)) {
+          attendance_status =
+              "Thank you for registering for the cpd, it is happening now";
+          statusCode = 11;
+        }
+
+        //check if the date is at the same momement
+        if (currentDate.isAtSameMomentAs(startDate) &&
+            (double.parse(widget.balance!) > 0)) {
+          // attendance_status =
+          //     "Thank you for registering for the cpd, it is happening now";
+          statusCode = 12;
+        }
+
+        if (currentDate.isAtSameMomentAs(endDate) &&
+            (double.parse(widget.balance!) == 0)) {
+          attendance_status =
+              "Thank you for registering for the cpd, it is happening now";
+          statusCode = 13;
+        }
+
+        if (currentDate.isAtSameMomentAs(endDate) &&
+            (double.parse(widget.balance!) > 0)) {
+          // attendance_status =
+          //     "Thank you for registering for the cpd, it is happening now";
+          statusCode = 14;
+        }
+      } else {
+        if (currentDate.isBefore(startDate)) {
+          {
+            attendance_status = "Already booked to attend the cpd";
+            statusCode = 15;
+          }
+        }
+
+        if (currentDate.isAfter(startDate) && currentDate.isBefore(endDate)) {
+          attendance_status =
+              "Thank you for registering for the cpd, it is happening now";
+          statusCode = 16;
+        }
+
+        //check if the date is at the same momement
+        if (currentDate.isAtSameMomentAs(startDate)) {
+          attendance_status =
+              "Thank you for registering for the cpd, it is happening now";
+          statusCode = 17;
+        }
+
+        if (currentDate.isAtSameMomentAs(endDate)) {
+          attendance_status =
+              "Thank you for registering for the cpd, it is happening now";
+          statusCode = 18;
+        }
       }
     }
 
@@ -605,7 +724,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
   }
 
   _handlePaymentInitialization(
-      String fullName, String email, String phoneNumber) async {
+      String fullName, String email, String phoneNumber, String amount) async {
     final Customer customer = Customer(
       name: fullName,
       phoneNumber: phoneNumber,
@@ -618,7 +737,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
         currency: "UGX",
         redirectUrl: AppEndpoints.flutterWaveRedirect,
         txRef: Uuid().v1(),
-        amount: isMember() ? widget.member_rate : widget.normal_rate,
+        amount: amount,
         customer: customer,
         paymentOptions: "card, payattitude, barter, bank transfer, ussd",
         customization: Customization(
@@ -631,12 +750,13 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
     var message;
     if (response.success == true) {
       message = "Payment successful,\n thank you!";
-      sendAttendanceRequest(widget.cpdId);
+      sendAttendanceRequest(widget.cpdId, amount);
     } else {
       message = "Payment failed,\n try again later";
     }
     showLoading(message);
-
+    //close any open dialog
+    Navigator.pop(context);
     setState(() {});
     print("${response.toJson()}");
   }
@@ -661,7 +781,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
     );
   }
 
-  void sendAttendanceRequest(String cpdID) async {
+  void sendAttendanceRequest(String cpdID, [amount = Null]) async {
     final userData = Provider.of<UserProvider>(context, listen: false).user;
     final userId = userData?.id; // Replace with your actual user ID
 
@@ -671,8 +791,8 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
     final Map<String, dynamic> requestBody = {
       'user_id': userId,
       'cpd_id': cpdID,
+      'amount': amount
     };
-
     try {
       final response = await http.post(
         apiUrl,
@@ -710,7 +830,6 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
     final expirely_date = Provider.of<UserProvider>(context, listen: false)
         .user
         ?.membership_expiry_date;
-    log("expiry date: $expirely_date");
     //check if the user is a member
     if (expirely_date != null && expirely_date.isNotEmpty) {
       DateTime currentDate = DateTime.now();

@@ -17,6 +17,7 @@ class CpdModel {
   final String banner;
   bool attendance_request;
   final String attendance_status;
+  String? balance;
 
   CpdModel({
     required this.id,
@@ -36,7 +37,8 @@ class CpdModel {
     required this.status,
     required this.type,
     required this.banner,
-    required this.attendance_status
+    required this.attendance_status,
+    this.balance,
   });
 
   String getStatus() {

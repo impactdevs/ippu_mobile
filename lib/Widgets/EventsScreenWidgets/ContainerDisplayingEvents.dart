@@ -90,6 +90,7 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
             banner_name: item['banner_name'] ?? '',
             details: item['details'] ?? '',
             status: item['status'] ?? '',
+            balance: item['balance'].toString(),
           );
         }).toList();
 
@@ -247,6 +248,7 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                         final eventId = item.id.toString();
                         final imageLink = item.banner_name;
                         final points = item.points.toString();
+                        final balance = item.balance;
                         return InkWell(
                           onTap: () async {
                             await Navigator.push(
@@ -264,6 +266,7 @@ class _ContainerDisplayingEventsState extends State<ContainerDisplayingEvents>
                                   imagelink:
                                       '${AppEndpoints.baseImageUrl}/banners/$imageLink',
                                   eventName: eventName,
+                                  balance: balance,
                                 );
                               }),
                             ).then((value) {
