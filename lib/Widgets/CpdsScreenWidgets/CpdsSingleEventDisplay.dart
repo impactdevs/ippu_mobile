@@ -35,8 +35,8 @@ class CpdsSingleEventDisplay extends StatefulWidget {
   final String target_group;
   final String normal_rate;
   final String member_rate;
-  final String? balance;
-  const CpdsSingleEventDisplay(
+  String? balance;
+  CpdsSingleEventDisplay(
       {super.key,
       required this.attendance_request,
       required this.rate,
@@ -351,7 +351,8 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
                                 onPressed: () {
                                   // _handlePaymentInitialization(profileData.name,
                                   //     profileData.email, profileData.phone_no!);
-                                  _showPaymentDialog(size, profileData);
+                                  _showPaymentDialog(size, profileData,
+                                      widget.normal_rate.toString());
                                 },
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(
@@ -426,13 +427,14 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
                                 onPressed: () {
                                   // _handlePaymentInitialization(profileData.name,
                                   //     profileData.email, profileData.phone_no!);
-                                  _showPaymentDialog(size, profileData);
+                                  _showPaymentDialog(
+                                      size, profileData, widget.balance);
                                 },
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: size.width * 0.12),
                                   child: Text(
-                                    'Pay Balance(UGX ${NumberFormat('#,###').format(int.parse(widget.balance??""))})',
+                                    'Pay Balance(UGX ${NumberFormat('#,###').format(int.parse(widget.balance ?? ""))})',
                                     style: GoogleFonts.lato(
                                       textStyle: const TextStyle(
                                           color: Colors
@@ -464,7 +466,8 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
                                     onPressed: () {
                                       // _handlePaymentInitialization(profileData.name,
                                       //     profileData.email, profileData.phone_no!);
-                                      _showPaymentDialog(size, profileData);
+                                      _showPaymentDialog(size, profileData,
+                                          widget.normal_rate.toString());
                                     },
                                     child: Padding(
                                       padding: EdgeInsets.symmetric(
@@ -507,7 +510,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
   final TextEditingController _amountController = TextEditingController();
 
   // Function to show the payment mode dialog
-  void _showPaymentDialog(Size size, profile) {
+  void _showPaymentDialog(Size size, profile, amount) {
     showDialog(
       context: context,
       builder: (context) {
@@ -528,7 +531,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
                 onTap: () {
                   Navigator.pop(context, true);
                   // Show a dialog to enter the amount for cashless payment
-                  _showCashlessPaymentDialog(size, profile);
+                  _showCashlessPaymentDialog(size, profile, amount);
                 },
               ),
             ],
@@ -539,9 +542,8 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
   }
 
   // Function to show the dialog for cashless payment
-  void _showCashlessPaymentDialog(Size size, profile) {
-    _amountController.text =
-        widget.normal_rate.toString(); // Set default to event fee
+  void _showCashlessPaymentDialog(Size size, profile, amount) {
+    _amountController.text = amount; // Set default to event fee
     showDialog(
       context: context,
       builder: (context) {
@@ -745,7 +747,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
             description: "Being payment for ${widget.cpdsname} booking",
             logo:
                 "https://ippu.or.ug/wp-content/uploads/2020/03/cropped-Logo-192x192.png"),
-        isTestMode: false);
+        isTestMode: true);
     final ChargeResponse response = await flutterwave.charge();
     var message;
     if (response.success == true) {
@@ -758,7 +760,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
     //close any open dialog
     Navigator.pop(context);
     setState(() {});
-    print("${response.toJson()}");
+    //reload the entire
   }
 
   Future<void> showLoading(String message) {
@@ -782,6 +784,7 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
   }
 
   void sendAttendanceRequest(String cpdID, [amount = Null]) async {
+    log("sending attendance request");
     final userData = Provider.of<UserProvider>(context, listen: false).user;
     final userId = userData?.id; // Replace with your actual user ID
 
@@ -793,7 +796,9 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
       'cpd_id': cpdID,
       'amount': amount
     };
+    log("sending attendance request");
     try {
+      log("sending attendance request");
       final response = await http.post(
         apiUrl,
         headers: {
@@ -807,11 +812,19 @@ class _CpdsSingleEventDisplayState extends State<CpdsSingleEventDisplay> {
         showBottomNotification("Booking successful......");
         const CircularProgressIndicator();
         Navigator.pop(context);
+
+        //update balance in the widget with the new balance from the response
+        final responseJson = jsonDecode(response.body);
+        final newBalance = responseJson['balance'];
+
+        log("Response: ${response.body}");
+        widget.balance = newBalance.toString();
       } else {
         // Handle errors or unsuccessful response
         showBottomNotification("Booking failed....!!!");
       }
     } catch (error) {
+      log("Error: $error");
       showBottomNotification("Booking failed.....!!!");
     }
   }
